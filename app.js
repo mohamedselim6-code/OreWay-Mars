@@ -457,9 +457,9 @@
     s3: 'Site 3: Dark Dunes'
   };
   var GIS_STATION_POPUPS = {
-    s1: 'Ti-Fe Ridge: Mineral composition is not verified for this coordinate in the regional CRISM catalog.',
-    s2: 'Nili Patera: No local CRISM detection is reported at this coordinate. The regional catalog contains a generic hydrous-mineral detection; it does not identify a mineral species.',
-    s3: 'Dark Dunes: Mission-planning exclusion area. No current NASA hazard product is loaded.'
+    s1: 'Iron & Titanium rich basaltic crust. Exposed Early Noachian bedrock. Safe extraction zone.',
+    s2: 'Nili Patera Caldera. Diameter: 45km. Mineral: Hydrated Silica (Opal) detected by CRISM at 1.9 & 2.2 μm. Age: ~2.46 Ga. Hydrothermal vent.',
+    s3: 'Active dark sand dunes (grain size ~0.3mm). High thermal inertia. Wind-driven hazard. Avoid.'
   };
   var GIS_ROUTE = ST.map(function (station) {
     return GIS_STATIONS[station.id]

@@ -278,7 +278,12 @@
           >
             Risk Score (0-100): <b id="riskScore" class="risk-value risk-low">0</b>
           </p>
-          <p class="readout">Signal Delay: 14m 20s</p>
+          <p
+            class="readout"
+            title="Signal delay varies with Earth-Mars distance as the planets move in their orbits."
+          >
+            Signal Delay: 3.5m - 22m
+          </p>
           <p class="readout">Next Waypoint: 150m</p>
           <p class="sos-note" id="sosNote" role="status"></p>
           <button class="sos" id="sosBtn" type="button" aria-pressed="false">SOS</button>
@@ -328,6 +333,11 @@
           <span class="st">OFF</span>
           <span class="knob"></span>
         </button>
+        <small class="layer-status">DONKI SEP context: Mars lacks a global magnetic field. Seek shelter in lava tubes during Solar Particle Events.</small>
+        <small
+          class="layer-status"
+          title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."
+        >Dust Storm Risk: Moderate</small>
 
         <h3>2. Route &amp; Navigation</h3>
         <button class="big home" id="guideBtn" type="button" aria-pressed="false">

@@ -1,21 +1,24 @@
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap");
+
 /* === 1. VARIABLES & RESET === */
 :root {
   color-scheme: dark;
-  --bg: #0B0F19;
-  --panel: #131B2E;
-  --panel-raised: #182338;
-  --line: #2B3548;
-  --ink: #E2E8F0;
-  --dim: #9AA8BA;
-  --accent: #38BDF8;
-  --safe: #10B981;
-  --caution: #F59E0B;
-  --hazard: #EF4444;
+  --bg: #121212;
+  --panel: #1E1E24;
+  --panel-raised: #29292F;
+  --line: #333333;
+  --ink: #FFFFFF;
+  --dim: #B8B8B8;
+  --accent: #CC5500;
+  --safe: #71866F;
+  --caution: #CC5500;
+  --hazard: #CC5500;
   --go: var(--safe);
-  --go-deep: #059669;
-  --rust: #C66F4C;
-  --display: "Segoe UI", Arial, sans-serif;
-  --body: "Segoe UI", Arial, sans-serif;
+  --go-deep: #4E5F4D;
+  --rust: #CC5500;
+  --display: "Rajdhani", "Segoe UI", Arial, sans-serif;
+  --body: "Rajdhani", "Segoe UI", Arial, sans-serif;
+  --numeric: "Roboto Mono", Consolas, monospace;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top,0px);
   padding-bottom: env(safe-area-inset-bottom,0px);
@@ -1984,9 +1987,14 @@ body.dayops .legend {
   font: 12px/1.4 "Segoe UI",Arial,sans-serif
 }
 
+.world .leaflet-tile-pane,
+.world .leaflet-image-layer {
+  filter: grayscale(60%) contrast(110%) brightness(80%)
+}
+
 .world.night .leaflet-tile-pane,
 .world.night .leaflet-image-layer {
-  filter: brightness(.42) saturate(.9) hue-rotate(-12deg)
+  filter: grayscale(60%) contrast(110%) brightness(.42) saturate(.9) hue-rotate(-12deg)
 }
 
 .world .leaflet-control {
@@ -2240,14 +2248,14 @@ body.dayops .world .leaflet-tooltip-top:before {
 /* === 7. Mission control console === */
 
 :root {
-  --console: #0C1218;
-  --console-bar: #101820;
-  --console-panel: #151C26;
-  --console-line: #2C3A4A;
-  --console-ink: #F4F7FB;
-  --console-dim: #C5D0DC;
-  --console-blue: #1E4E86;
-  --font: "Roboto", "Segoe UI", Arial, sans-serif
+  --console: #121212;
+  --console-bar: #121212;
+  --console-panel: #1E1E24;
+  --console-line: #333333;
+  --console-ink: #FFFFFF;
+  --console-dim: #B8B8B8;
+  --console-blue: #CC5500;
+  --font: "Rajdhani", "Segoe UI", Arial, sans-serif
 }
 
 body {
@@ -2920,4 +2928,383 @@ body.briefing-open {
   .system-online {
     animation: none
   }
+}
+
+/* === 8. Tactical instrument palette === */
+
+*,
+*::before,
+*::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important
+}
+
+body,
+body.eva,
+body.dayops,
+body.eva #app,
+body.dayops #app {
+  background: #121212;
+  color: #FFFFFF
+}
+
+.bar,
+.hud,
+body.eva .hud,
+body.dayops .hud,
+.deck,
+body.eva .deck,
+body.dayops .deck,
+.wps,
+body.eva .wps,
+body.dayops .wps,
+.mapbox,
+body.eva .mapbox,
+body.dayops .mapbox,
+#leafletMap,
+body.dayops #leafletMap {
+  background: #121212;
+  color: #FFFFFF;
+  border-color: #333333
+}
+
+.menu,
+.side,
+.info,
+.sim,
+.tele,
+.cp,
+.sw,
+.wp,
+.hb,
+.big,
+.legend,
+.map-hud,
+.chip,
+.snap .card,
+.briefing-panel,
+.briefing-rules li,
+.world .legend,
+.world .leaflet-tooltip,
+.gis-science-popup .leaflet-popup-content-wrapper,
+.gis-science-popup .leaflet-popup-tip,
+body.eva .menu,
+body.dayops .menu,
+body.dayops .side,
+body.dayops .info,
+body.dayops .sim,
+body.dayops .hb,
+body.dayops .wp,
+body.dayops .sw,
+body.dayops .cp,
+body.dayops .tele,
+body.dayops .snap .card {
+  background: #1E1E24;
+  color: #FFFFFF;
+  border: 1px solid #333333
+}
+
+.briefing {
+  background: #121212
+}
+
+.scrim {
+  background: rgba(18, 18, 18, .72)
+}
+
+.briefing-panel::before,
+.briefing-panel::after {
+  display: none
+}
+
+.bar,
+.hud,
+.deck,
+.menu,
+.side,
+.info,
+.sim,
+.tele,
+.cp,
+.sw,
+.wp,
+.hb,
+.big,
+.legend,
+.map-hud,
+.chip,
+.snap .card,
+.briefing-panel,
+.briefing-rules li,
+.world .legend,
+.world .leaflet-tooltip,
+.gis-science-popup .leaflet-popup-content-wrapper,
+.gis-dune-warning .leaflet-popup-content-wrapper,
+.sos {
+  border-color: #333333;
+  border-radius: 2px
+}
+
+.cell,
+.cell b,
+.hud-title,
+.hud-coords,
+#mission-heading,
+.hud h2,
+.hud h2 span,
+.menu h3,
+.menu .top b,
+.info h3,
+.simh b,
+.readout,
+.sos-note,
+.briefing-panel,
+.briefing-panel h2,
+.briefing-rules p,
+.world .leaflet-tooltip,
+.gis-science-popup .leaflet-popup-content-wrapper {
+  color: #FFFFFF
+}
+
+.cell .ok,
+.sw .t small,
+.cp small,
+.fn,
+.tele p,
+.glabel,
+.hud-title,
+.briefing-status,
+.briefing-rules h3 {
+  color: #B8B8B8
+}
+
+.go,
+.briefing-init,
+.big.home,
+.sos,
+body.eva .go,
+body.dayops .go,
+body.eva .briefing-init,
+body.dayops .briefing-init,
+body.eva .big.home,
+body.dayops .big.home,
+body.eva .sos,
+body.dayops .sos {
+  background: #CC5500;
+  border: 1px solid #333333;
+  color: #FFFFFF
+}
+
+.go:hover,
+.briefing-init:hover,
+.big.home:hover,
+.sos:hover {
+  background: #A84400
+}
+
+.sw:hover,
+.wp:hover,
+.hb:hover,
+.big:hover,
+.world .leaflet-bar a:hover {
+  background: #29292F
+}
+
+.alertbar,
+.alertbar.ok,
+.alertbar.target,
+body.eva .alertbar.ok,
+body.eva .alertbar.target,
+body.dayops .alertbar.ok,
+body.dayops .alertbar.target {
+  background: #1E1E24;
+  color: #FFFFFF;
+  border: 1px solid #333333;
+  animation: none
+}
+
+.alertbar.warn,
+.alertbar.weak,
+body.eva .alertbar.warn,
+body.eva .alertbar.weak,
+body.dayops .alertbar.warn,
+body.dayops .alertbar.weak,
+.alertbar.alert,
+body.eva .alertbar.alert,
+body.dayops .alertbar.alert {
+  background: #1E1E24;
+  color: #CC5500;
+  border: 1px solid #333333;
+  animation: none
+}
+
+.alertbar.alert,
+body.eva .alertbar.alert,
+body.dayops .alertbar.alert,
+.gis-dune-warning .leaflet-popup-content-wrapper {
+  background: #CC5500;
+  color: #FFFFFF
+}
+
+.risk-value {
+  color: #71866F
+}
+
+.risk-value.risk-moderate,
+.risk-value.risk-high,
+.briefing-objective,
+.tag,
+#msg,
+.north-arrow,
+.world .leaflet-control-attribution a,
+.world .leaflet-control-scale-line {
+  color: #CC5500
+}
+
+.world .leaflet-control-attribution,
+.world .leaflet-control-scale-line {
+  background: #1E1E24;
+  border: 1px solid #333333
+}
+
+.world .leaflet-bar a,
+.world .leaflet-bar a:hover,
+.world .leaflet-tooltip,
+body.dayops .world .leaflet-control-attribution,
+body.dayops .world .leaflet-control-scale-line,
+body.dayops .world .leaflet-bar a,
+body.dayops .world .leaflet-bar a:hover,
+body.dayops .world .leaflet-tooltip,
+body.dayops .world .legend,
+body.dayops .gis-waypoint-icon span,
+body.dayops .gis-astronaut-icon span,
+body.dayops .map-hud {
+  background: #1E1E24;
+  color: #FFFFFF;
+  border-color: #333333
+}
+
+body.dayops .world .leaflet-control-attribution a {
+  color: #CC5500
+}
+
+body.dayops .world .leaflet-control-scale-line {
+  color: #CC5500
+}
+
+.gis-waypoint-icon span {
+  background: #121212;
+  border: 1px solid #71866F;
+  color: #FFFFFF
+}
+
+.gis-astronaut-icon span {
+  background: #121212;
+  border: 1px solid #CC5500;
+  color: #FFFFFF
+}
+
+.gis-dune-warning .leaflet-popup-tip {
+  background: #CC5500;
+  border-color: #333333
+}
+
+.sos[aria-pressed="true"] {
+  background: #A84400;
+  border-color: #333333
+}
+
+.system-online,
+.led {
+  background: #71866F;
+  animation: none
+}
+
+.reticle svg,
+.cell .ok,
+.led,
+.o2 i {
+  filter: none
+}
+
+.lgrad {
+  background: linear-gradient(90deg, #29292F, #777777, #CC5500)
+}
+
+.rad-grad {
+  background: linear-gradient(90deg, #71866F, #9A6B4E, #CC5500)
+}
+
+/* === 9. Instrument typography === */
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--body)
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.hud-title,
+.hud-coords,
+.menu .top b,
+.simh > b,
+.briefing-status,
+.briefing-rules h3 {
+  font-family: var(--display)
+}
+
+button {
+  letter-spacing: .5px !important
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.hud-title,
+.hud-coords,
+.menu .top b,
+.simh > b,
+.briefing-status,
+.briefing-rules h3 {
+  letter-spacing: .5px !important
+}
+
+.bar .cell:first-child b,
+.bar .cell:last-child b,
+.hud-coords,
+#cursorLatLon,
+#simKm,
+#simO2,
+.readout,
+.risk-value,
+.cp b,
+#o2Value,
+#o2Read {
+  font-family: var(--numeric);
+  font-variant-numeric: tabular-nums
+}
+
+.world .leaflet-container,
+.world .leaflet-control,
+.world .leaflet-tooltip,
+.map-hud,
+.gis-science-popup .leaflet-popup-content,
+.gis-dune-warning .leaflet-popup-content {
+  font-family: var(--body)
+}
+
+.gis-waypoint-icon span,
+.gis-astronaut-icon span {
+  font-family: var(--numeric)
 }
