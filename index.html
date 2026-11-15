@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>OreWay</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="bar" role="status" aria-label="Mission status">
+      <div class="cell">
+        Target:
+        <b>Syrtis Major Planum • MC-13 Quadrangle (8.4°N, 69.5°E)</b>
+      </div>
+      <div class="cell">
+        <span class="led"></span>
+        Surface model:
+        <b class="ok">Illustrative</b>
+      </div>
+      <div class="cell">
+        Suit O2:
+        <b>100%</b>
+        <span class="o2" aria-hidden="true"><i></i></span>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="stage"
+        id="stage"
+        aria-label="Interactive 3D globe of Mars with Syrtis Major marked"
+      >
+        <svg
+          class="rings"
+          viewBox="-100 -100 200 200"
+          aria-hidden="true"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <circle class="r3" r="98"></circle>
+          <g class="spin-a"><circle class="r2" r="94"></circle></g>
+          <g class="spin-b"><circle class="r1" r="88"></circle></g>
+          <path class="tick" d="M0 -100V-94M0 100V94M-100 0H-94M100 0H94"></path>
+        </svg>
+        <div id="globe"></div>
+        <div class="reticle" id="reticle" aria-hidden="true">
+          <svg viewBox="-46 -46 92 92">
+            <circle class="dash" r="30"></circle>
+            <path
+              class="br"
+              d="M-40 -22V-40H-22M22 -40H40V-22M40 22V40H22M-22 40H-40V22"
+            ></path>
+            <circle class="dot" r="3"></circle>
+          </svg>
+          <span class="tag">Syrtis Major<small>8.4°N, 69.5°E</small></span>
+        </div>
+      </section>
+
+      <h1>OreWay</h1>
+      <p class="sub">Planetary Surface Navigation &amp; In-Situ Resource Assessment</p>
+      <div class="go-wrap">
+        <button class="go" id="start" type="button">Initialize Surface Telemetry</button>
+      </div>
+      <p id="msg" aria-live="polite"></p>
+    </main>
+
+    <section id="app" aria-labelledby="mission-heading">
+      <header class="hud">
+        <div class="hud-actions">
+          <button
+            class="hb"
+            id="menuBtn"
+            type="button"
+            aria-controls="menu"
+            aria-expanded="false"
+          >
+            Mission Control
+          </button>
+          <button class="hb overview-btn" id="overviewBtn" type="button">← Overview</button>
+        </div>
+        <h2 id="mission-heading">
+          Syrtis Major Planum
+          <span>MC-13 Quadrangle · 8.4°N, 69.5°E</span>
+        </h2>
+        <button class="hb" id="modeBtn" type="button" aria-pressed="false">Day Ops</button>
+      </header>
+
+      <div id="banner" class="alertbar ok" role="status" aria-live="polite">
+        <span id="bmsg"></span>
+      </div>
+
+      <div class="work">
+        <div class="mapbox">
+          <div class="world" id="world">
+            <div
+              id="leafletMap"
+              role="application"
+              aria-label="Interactive Syrtis Major planetary GIS map"
+            ></div>
+            <div id="mapFallback">
+              <div class="ground">
+                <canvas id="cBase"></canvas>
+                <canvas class="lyr on" id="c_mola"></canvas>
+                <canvas class="lyr" id="c_thermal"></canvas>
+                <canvas class="lyr" id="c_crism"></canvas>
+              </div>
+              <svg
+                class="ov"
+                id="ov"
+                viewBox="0 0 800 700"
+                role="group"
+                aria-label="Illustrative fallback terrain map with route and stations"
+              >
+                <defs>
+                  <pattern
+                    id="hatch"
+                    width="12"
+                    height="12"
+                    patternUnits="userSpaceOnUse"
+                    patternTransform="rotate(45)"
+                  >
+                    <rect
+                      width="12"
+                      height="12"
+                      fill="rgba(183,101,109,.12)"
+                    ></rect>
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="12"
+                      stroke="rgba(183,101,109,.42)"
+                      stroke-width="3"
+                    ></line>
+                  </pattern>
+                </defs>
+                <g id="grid"></g>
+                <g
+                  id="haz"
+                  class="hz sta"
+                  tabindex="0"
+                  role="button"
+                  aria-label="Steep crater hazard"
+                >
+                  <circle
+                    cx="400"
+                    cy="330"
+                    r="86"
+                    fill="url(#hatch)"
+                    stroke="#b7656d"
+                    stroke-width="2"
+                    stroke-dasharray="10 7"
+                  ></circle>
+                  <rect
+                    x="258"
+                    y="426"
+                    width="284"
+                    height="34"
+                    rx="4"
+                    fill="rgba(75,35,42,.92)"
+                    stroke="#b7656d"
+                  ></rect>
+                  <text class="hzt" x="400" y="450" text-anchor="middle">
+                    SLOPE HAZARD · &gt;10°
+                  </text>
+                </g>
+                <ellipse
+                  cx="600"
+                  cy="250"
+                  rx="120"
+                  ry="90"
+                  fill="rgba(196,154,91,.12)"
+                  stroke="#c49a5b"
+                  stroke-width="2"
+                  stroke-dasharray="4 6"
+                ></ellipse>
+                <path
+                  d="M160 480L340 320"
+                  stroke="rgba(196,154,91,.45)"
+                  stroke-width="3"
+                  stroke-dasharray="3 7"
+                  stroke-linecap="round"
+                  fill="none"
+                ></path>
+                <line
+                  id="link"
+                  stroke-width="2.5"
+                  stroke-dasharray="4 5"
+                  opacity=".55"
+                ></line>
+                <text class="gl" x="700" y="96" text-anchor="middle">RELAY</text>
+                <text class="gl" x="700" y="120" text-anchor="middle">Orbiter link</text>
+                <line
+                  id="vec"
+                  stroke-width="4"
+                  stroke-dasharray="10 8"
+                  stroke-linecap="round"
+                  visibility="hidden"
+                ></line>
+                <text
+                  id="vecT"
+                  class="t2"
+                  text-anchor="middle"
+                  visibility="hidden"
+                ></text>
+                <path
+                  id="route"
+                  d="M100,580 C150,540 210,450 250,400 C250,260 400,170 560,230 C660,265 740,340 690,450"
+                ></path>
+                <path id="routeD"></path>
+                <g id="stations"></g>
+                <g id="astro">
+                  <circle
+                    r="10"
+                    fill="#0f172a"
+                    stroke="#5aa77a"
+                    stroke-width="3"
+                  ></circle>
+                  <circle r="3" fill="#f8fafc"></circle>
+                </g>
+                <g transform="translate(660,668)">
+                  <path
+                    d="M0 0H109M0 -6V6M109 -6V6"
+                    stroke="#e2e8f0"
+                    stroke-width="2"
+                    fill="none"
+                  ></path>
+                  <text class="gl" x="54" y="-12" text-anchor="middle">1 km</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="chip provenance" id="dataStatus">
+              NASA Mars Trek imagery loading · illustrative relief available
+            </div>
+            <div class="map-hud" aria-live="polite">
+              <span id="cursorLatLon">Cursor: --</span>
+              <span class="north-arrow" aria-label="North">↑ <b>N</b></span>
+            </div>
+            <div class="legend" id="legend" aria-label="Map legend"></div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="sim">
+            <div class="simh">
+              <b>Traverse progress</b>
+              <span id="simKm">0.0 km of 8.3 km</span>
+              <span>O₂ <b id="simO2">100%</b></span>
+            </div>
+            <input
+              type="range"
+              id="slider"
+              min="0"
+              max="1000"
+              value="0"
+              aria-label="EVA route progress"
+            >
+            <div class="wps">
+              <button class="wp" type="button" data-id="base">Base</button>
+              <button class="wp" type="button" data-id="s1">Site 1</button>
+              <button class="wp" type="button" data-id="s2">Site 2</button>
+              <button class="wp" type="button" data-id="s3">Site 3</button>
+              <button class="wp" type="button" id="autoBtn">Run route</button>
+            </div>
+          </div>
+          <section class="info" id="info" aria-live="polite"></section>
+        </div>
+      </div>
+
+      <div class="scrim" id="scrim"></div>
+      <aside class="menu" id="menu" aria-label="Mission menu" inert>
+        <div class="top">
+          <b>Mission Control</b>
+          <button class="hb" id="closeMenu" type="button">Close</button>
+        </div>
+
+        <h3>1. Terrain &amp; Data Layers</h3>
+        <button class="sw" role="switch" aria-checked="true" data-l="mola">
+          <span class="t">
+            <b>MOLA Topography &amp; Slope Safety</b>
+            <small>Safe plateau &lt;2° · caution 2–10° · hazard &gt;10°</small>
+          </span>
+          <span class="st">ON</span>
+          <span class="knob"></span>
+        </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="thermal">
+          <span class="t">
+            <b>THEMIS Thermal &amp; Environment</b>
+            <small>Relative thermal inertia and surface temperature</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="crism">
+          <span class="t">
+            <b>CRISM Mineral &amp; Geology</b>
+            <small>Illustrative spectral units and alteration zones</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
+
+        <h3>2. Route &amp; Navigation</h3>
+        <button class="big home" id="guideBtn" type="button" aria-pressed="false">
+          Show return-to-base guidance
+        </button>
+        <button class="sw" id="audioSw" role="switch" aria-checked="true">
+          <span class="t">
+            <b>Audio hazard alerts</b>
+            <small>Sound cue near modeled slope hazards</small>
+          </span>
+          <span class="st">ON</span>
+          <span class="knob"></span>
+        </button>
+
+        <h3>3. Suit &amp; Communications</h3>
+        <div class="tele">
+          <div class="telemetry-grid">
+            <div
+              class="gauge"
+              id="o2Gauge"
+              role="img"
+              aria-label="Oxygen 100 percent"
+            >
+              <span class="gval" id="o2Value">100%</span>
+              <span class="glabel">Oxygen</span>
+            </div>
+            <div
+              class="gauge"
+              id="signalGauge"
+              role="img"
+              aria-label="Signal strong"
+            >
+              <span class="gval" id="signalValue">Strong</span>
+              <span class="glabel">Signal</span>
+            </div>
+          </div>
+          <p id="o2Read">Estimated return reserve: 0 min</p>
+          <p id="sigRead">Base Camp direct link</p>
+        </div>
+
+        <h3>4. Mission Snapshot</h3>
+        <button class="big fun" id="snapBtn" type="button">
+          Generate mission snapshot
+        </button>
+        <button class="big fun" id="marsBtn" type="button">
+          Toggle surface audio
+        </button>
+      </aside>
+
+      <div class="snap" id="snap" hidden role="dialog" aria-label="Mars snapshot">
+        <div class="card">
+          <img id="snapImg" alt="Mission postcard from Syrtis Major">
+          <div class="row">
+            <a class="hb" id="snapDl" download="OreWay-Syrtis-Major.png">
+              ⬇ DOWNLOAD PNG
+            </a>
+            <button class="hb" id="snapX" type="button">CLOSE</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="data.js" defer></script>
+    <script src="telemetry.js" defer></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>

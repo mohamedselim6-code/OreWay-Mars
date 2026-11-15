@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "status": "no-processed-samples",
+  "target": {
+    "name": "Syrtis Major Planum",
+    "quadrangle": "MC-13",
+    "latitudeDegrees": 8.4,
+    "longitudeDegreesEast": 69.5
+  },
+  "layers": {
+    "mola": {
+      "instrument": "Mars Orbiter Laser Altimeter",
+      "sourceUrl": "https://pds-geosciences.wustl.edu/missions/mgs/mola.html",
+      "provenance": "No raster has been processed for this deployment.",
+      "thresholdsDeg": {
+        "safeMaxExclusive": 2,
+        "cautionMaxInclusive": 10
+      }
+    }
+  },
+  "stations": []
+}
