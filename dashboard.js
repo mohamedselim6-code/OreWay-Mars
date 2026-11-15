@@ -3,12 +3,17 @@
   'use strict';
 
   var deckO2 = document.getElementById('deckO2');
+  var deckO2Value = document.getElementById('deckO2Value');
   var o2Value = document.getElementById('o2Value');
   var sos = document.getElementById('sosBtn');
   var note = document.getElementById('sosNote');
 
   function syncOxygen() {
     if (!deckO2 || !o2Value) return;
+    if (deckO2Value) {
+      deckO2Value.textContent = o2Value.textContent.trim();
+      return;
+    }
     deckO2.textContent = 'Suit O2: ' + o2Value.textContent.trim();
   }
 

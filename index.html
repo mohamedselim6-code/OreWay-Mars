@@ -329,6 +329,14 @@
             <span id="bmsg"></span>
           </div>
         </div>
+        <div
+          id="profileChartContainer"
+          class="profile-chart-container"
+          role="img"
+          aria-label="Elevation and oxygen profile over an 8.3 kilometer traverse"
+        >
+          <canvas id="profileChart"></canvas>
+        </div>
       </div>
 
       <footer class="deck" aria-label="Critical telemetry">
@@ -348,12 +356,17 @@
           >
         </div>
         <div class="deck-critical">
-          <p class="readout" id="deckO2">Suit O2: 100%</p>
+          <p class="readout" id="deckO2">
+            Suit O2: <span id="deckO2Value">100%</span>
+            <small>(Simulated Planning Estimate)</small>
+          </p>
           <p
             class="readout risk-readout"
             title="Planning index, not a measured risk value. MOLA uses nearby numeric samples when available, otherwise configured exclusion-zone proximity; THEMIS and DONKI add context weights, not measured temperature or Mars surface dose."
           >
-            Risk Score (0-100): <b id="riskScore" class="risk-value risk-low">0</b>
+            Risk Score (0-100):
+            <b id="riskScore" class="risk-value risk-low">0</b>
+            <small>(Simulated Planning Estimate)</small>
           </p>
           <p
             class="readout"
@@ -472,6 +485,7 @@
     <script src="data.js" defer></script>
     <script src="telemetry.js" defer></script>
     <script src="extras.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="app.js" defer></script>
   </body>
 </html>

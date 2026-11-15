@@ -899,7 +899,21 @@
       if (GIS_STATION_POPUPS[station.id]) {
         var popupContent = document.createElement('div');
         popupContent.className = 'gis-popup-copy';
-        popupContent.textContent = GIS_STATION_POPUPS[station.id];
+        var popupDescription = document.createElement('div');
+        popupDescription.textContent = GIS_STATION_POPUPS[station.id];
+        popupContent.appendChild(popupDescription);
+        if (station.id !== 'base') {
+          popupContent.appendChild(document.createElement('br'));
+          var provenance = document.createElement('small');
+          provenance.appendChild(document.createTextNode(
+            'Source: NASA Orbital Data (CRISM/MOLA)'
+          ));
+          provenance.appendChild(document.createElement('br'));
+          provenance.appendChild(document.createTextNode(
+            'Data Type: Observed Orbital Data'
+          ));
+          popupContent.appendChild(provenance);
+        }
         marker.bindPopup(popupContent, {
           className: 'gis-science-popup'
         });
@@ -1355,7 +1369,7 @@
     slider.setAttribute('aria-valuetext', km.toFixed(1) + ' km');
     $('#simKm').textContent = km.toFixed(1) + ' km of 8.3 km';
     $('#simO2').textContent = o2 + '%';
-    $('#deckO2').textContent = 'Suit O2: ' + o2 + '%';
+    $('#deckO2Value').textContent = o2 + '%';
     $('#o2Value').textContent = o2 + '%';
     $('#o2Gauge').style.setProperty('--gauge-progress', o2 + '%');
     $('#o2Gauge').setAttribute('aria-label', 'Oxygen ' + o2 + ' percent');
@@ -1502,6 +1516,156 @@
       '<p>Global event context only; not a Mars surface-dose map.</p>' +
       '<p><a href="https://api.nasa.gov/DONKI/SEP" target="_blank" rel="noopener noreferrer">NASA DONKI SEP API</a></p>'
   };
+  var profileChart = null;
+  function renderProfileChart() {
+    var canvas = $('#profileChart');
+    var ChartConstructor = window.Chart;
+    if (!canvas || typeof ChartConstructor !== 'function') {
+      console.error(
+        'Elevation and oxygen profile could not initialize: Chart.js or its canvas is unavailable.'
+      );
+      return;
+    }
+    if (profileChart) profileChart.destroy();
+    var context = canvas.getContext('2d');
+    if (!context) {
+      console.error('Elevation and oxygen profile could not initialize: 2D canvas is unavailable.');
+      return;
+    }
+    profileChart = new ChartConstructor(context, {
+      type: 'line',
+      data: {
+        labels: ['0.0', '0.9', '1.8', '2.8', '3.7', '4.6', '5.5', '6.5', '7.4', '8.3'],
+        datasets: [{
+          label: 'Elevation (m)',
+          data: [120, 138, 165, 148, 190, 224, 205, 177, 154, 168],
+          yAxisID: 'elevation',
+          borderColor: '#38BDF8',
+          backgroundColor: 'rgba(56, 189, 248, .12)',
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 4,
+          tension: .3,
+          fill: false
+        }, {
+          label: 'Oxygen (%)',
+          data: [100, 95, 90, 84, 78, 72, 65, 59, 54, 50],
+          yAxisID: 'oxygen',
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16, 185, 129, .1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 4,
+          tension: .3,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: 'Elevation & Oxygen Profile',
+            color: '#F8FAFC',
+            font: {
+              size: 11,
+              weight: '600'
+            },
+            padding: {
+              top: 0,
+              bottom: 2
+            }
+          },
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#CBD5E1',
+              boxWidth: 12,
+              boxHeight: 2,
+              padding: 8,
+              font: {
+                size: 9
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Traverse distance (km)',
+              color: '#94A3B8',
+              font: {
+                size: 9
+              }
+            },
+            ticks: {
+              color: '#94A3B8',
+              maxTicksLimit: 6,
+              font: {
+                size: 9
+              }
+            },
+            grid: {
+              color: 'rgba(148, 163, 184, .12)'
+            }
+          },
+          elevation: {
+            type: 'linear',
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Elevation (m)',
+              color: '#38BDF8',
+              font: {
+                size: 9
+              }
+            },
+            ticks: {
+              color: '#38BDF8',
+              maxTicksLimit: 4,
+              font: {
+                size: 9
+              }
+            },
+            grid: {
+              color: 'rgba(148, 163, 184, .12)'
+            }
+          },
+          oxygen: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            max: 100,
+            title: {
+              display: true,
+              text: 'O₂ (%)',
+              color: '#10B981',
+              font: {
+                size: 9
+              }
+            },
+            ticks: {
+              color: '#10B981',
+              maxTicksLimit: 4,
+              font: {
+                size: 9
+              }
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+  }
   function legend() {
     var activeLegend = LAY[LAY.length - 1] || 'def';
     $('#legend').innerHTML = LG[activeLegend];
@@ -1754,6 +1918,7 @@
     if (b.classList.contains('eva')) return;
     b.classList.add('eva', 'dayops');
     setupGisMap();
+    renderProfileChart();
     pick('base', null, false);
     clearTimeout(mapTransitionTimer);
     mapTransitionTimer = setTimeout(function () {
