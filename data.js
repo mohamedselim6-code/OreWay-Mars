@@ -23,7 +23,7 @@
       id: 'base',
       marker: 'A',
       label: 'Base Camp Alpha',
-      subtitle: 'Landing Reference',
+      subtitle: 'Flat basaltic plain',
       x: 100,
       y: 580,
       anchor: 'middle',
@@ -31,50 +31,50 @@
       labelY: 628,
       km: 0,
       name: 'Base Camp Alpha',
-      tag: 'Landing reference point',
-      note: 'Configured landing and communications reference point. Confirm terrain conditions against the source products before mission use.'
+      tag: 'Flat basaltic plain',
+      note: 'Flat basaltic plain.'
     }, {
       id: 's1',
       marker: '1',
       label: 'Site 1',
-      subtitle: 'Ti-Fe Ridge',
+      subtitle: 'Volcanic Basalt & Olivine',
       x: 250,
       y: 400,
       anchor: 'end',
       labelX: 214,
       labelY: 392,
       km: 2.4,
-      name: 'Site 1: Ti-Fe ridge',
-      tag: 'Mineral assessment area',
-      note: 'Configured mineral-assessment waypoint. No species-level composition is verified for this site in the regional CRISM catalog.'
+      name: 'Site 1: Volcanic Basalt & Olivine',
+      tag: 'Volcanic Basalt & Olivine',
+      note: 'Volcanic Basalt & Olivine.'
     }, {
       id: 's2',
       marker: '2',
       label: 'Site 2',
-      subtitle: 'Nili Patera',
+      subtitle: 'Carbonate-Bearing Terrain',
       x: 560,
       y: 230,
       anchor: 'start',
       labelX: 596,
       labelY: 204,
       km: 5.5,
-      name: 'Site 2: Nili Patera',
-      tag: 'Alteration assessment area',
-      note: 'Configured alteration-assessment waypoint. The regional CRISM service does not report a species-level detection at this coordinate.'
+      name: 'Site 2: Carbonate-Bearing Terrain',
+      tag: 'Carbonate-Bearing Terrain',
+      note: 'Carbonate-Bearing Terrain.'
     }, {
       id: 's3',
       marker: '3',
       label: 'Site 3',
-      subtitle: 'Dark Dunes',
+      subtitle: 'Crater Rim (Phyllosilicates)',
       x: 690,
       y: 450,
       anchor: 'end',
       labelX: 650,
       labelY: 444,
       km: 8.3,
-      name: 'Site 3: Dark dunes',
-      tag: 'Dune field assessment area',
-      note: 'Configured dune-avoidance waypoint. The exclusion geometry is a mission-planning feature, not a current NASA hazard product.'
+      name: 'Site 3: Crater Rim (Phyllosilicates)',
+      tag: 'Crater Rim (Phyllosilicates)',
+      note: 'Crater Rim (Phyllosilicates).'
     }],
     hazard: {
       id: 'haz',

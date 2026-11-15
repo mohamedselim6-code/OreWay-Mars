@@ -3492,3 +3492,76 @@ body.dayops .wps {
   background: rgba(16, 185, 129, .18);
   pointer-events: none
 }
+
+/* === 14. System alert and walk guidance UI === */
+
+.system-alerts {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  z-index: 1105;
+  width: min(300px, calc(100% - 20px));
+  padding: 10px 12px;
+  background: #121212;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  color: #FFFFFF
+}
+
+.system-alerts h2 {
+  margin: 0 0 .4rem;
+  font: 600 .9rem/1.35 var(--body);
+  color: #FFFFFF
+}
+
+.system-alerts p {
+  margin: 0;
+  font-size: .82rem;
+  line-height: 1.4
+}
+
+.system-alerts #systemAlertsClear {
+  color: #B8B8B8
+}
+
+.system-alerts .system-alert-item {
+  margin-top: .4rem;
+  padding: .45rem .55rem;
+  background: #541818;
+  border-left: 3px solid #EF4444;
+  color: #FEE2E2;
+  font-weight: 700
+}
+
+.system-alerts [hidden] {
+  display: none !important
+}
+
+.alertbar.alert,
+body.eva .alertbar.alert,
+body.dayops .alertbar.alert {
+  background: #A32020;
+  border-color: #F87171;
+  color: #FFFFFF;
+  font-weight: 700;
+  animation: none;
+  box-shadow: none;
+  text-shadow: none
+}
+
+.walk-hint {
+  display: block;
+  margin-top: .35rem;
+  color: #B8B8B8;
+  font-size: .78rem;
+  line-height: 1.4
+}
+
+@media (max-width: 700px) {
+  .system-alerts {
+    top: 44px;
+    right: 6px;
+    width: min(260px, calc(100% - 12px));
+    padding: 8px 10px
+  }
+}

@@ -452,14 +452,15 @@
   };
   var GIS_STATION_NAMES = {
     base: 'Base Camp Alpha',
-    s1: 'Site 1: Ti-Fe Ridge',
-    s2: 'Site 2: Nili Patera',
-    s3: 'Site 3: Dark Dunes'
+    s1: 'Site 1: Volcanic Basalt & Olivine',
+    s2: 'Site 2: Carbonate-Bearing Terrain',
+    s3: 'Site 3: Crater Rim (Phyllosilicates)'
   };
   var GIS_STATION_POPUPS = {
-    s1: 'Iron & Titanium rich basaltic crust. Exposed Early Noachian bedrock. Safe extraction zone.',
-    s2: 'Nili Patera Caldera. Diameter: 45km. Mineral: Hydrated Silica (Opal) detected by CRISM at 1.9 & 2.2 μm. Age: ~2.46 Ga. Hydrothermal vent.',
-    s3: 'Active dark sand dunes (grain size ~0.3mm). High thermal inertia. Wind-driven hazard. Avoid.'
+    base: 'Flat basaltic plain.',
+    s1: 'Volcanic Basalt & Olivine.',
+    s2: 'Carbonate-Bearing Terrain.',
+    s3: 'Crater Rim (Phyllosilicates).'
   };
   var GIS_ROUTE = ST.map(function (station) {
     return GIS_STATIONS[station.id]
@@ -492,7 +493,9 @@
   var gisTilesReady = false;
   var gisTileTimeout = 0;
   var GIS_DUNE_WARNING =
-    'WARNING: Approaching Hazard Zone (Dark Dunes). Reroute Recommended.';
+    'CRITICAL WARNING: Approaching Hazard Zone (Crater Rim). Reroute Recommended.';
+  var GIS_OXYGEN_WARNING =
+    'WARNING: Oxygen levels low. Begin return to Base Camp.';
   var GIS_DUNE_WARNING_DISTANCE_M = 600;
   var GIS_RADAR_RADIUS_M = 250;
   var GIS_RISK_SAMPLE_RADIUS_M = 250;
@@ -1138,6 +1141,7 @@
   }, riskScore = 0, riskHasInput = false, simReady = false, auto = 0,
   walkAnimation = 0, walkSimulationActive = false,
   duneWarningActive = false, nightThermalAuto = false,
+  solarParticleEventActive = false, guideBeforeSolarEvent = false,
   audio = Telemetry.createAudioUtilities(), ambientOn = false;
   function setRiskScore(score) {
     riskScore = Math.max(0, Math.min(100, Math.round(score)));
@@ -1218,6 +1222,7 @@
         score += 10;
       }
     }
+    if (solarParticleEventActive) score += 25;
     return Math.max(0, Math.min(100, Math.round(score)));
   }
   function banner(c, t) {
@@ -1268,6 +1273,10 @@
     var metrics = Telemetry.traverseMetrics(kmAt(cur), map.traverseKm, 15, map.returnMinutes);
     var km = metrics.distanceKm, o2 = metrics.oxygenPercent,
       ret = metrics.returnMinutes, near = null, i;
+    if (walkSimulationActive) {
+      o2 = Math.max(50, Math.round(100 - (cur / TL) * 50));
+    }
+    var oxygenLow = o2 <= 50;
     for (i = 1; i < ST.length; i++) if (Math.abs(cur - ST[i].len) < 18) near = ST[i];
     var gisPosition = syncGisSimulation();
     var inHazard = gisPosition && gisHazardLayer
@@ -1296,17 +1305,23 @@
           ? 'weak'
           : 'safe';
     var weak = st === 'weak';
+    $('#hazardSystemAlert').hidden = !approachingDunes;
+    $('#oxygenSystemAlert').hidden = !oxygenLow;
+    $('#solarEventAlert').hidden = !solarParticleEventActive;
+    $('#systemAlertsClear').hidden =
+      approachingDunes || oxygenLow || solarParticleEventActive;
     T = {
       km: km,
       o2: o2,
       ret: ret,
       weak: weak
     };
-    var key = st + (near ? near.id: '');
+    var key = st + (near ? near.id: '') + (oxygenLow ? ':oxygen-low': '');
     if (key !== lastKey) {
       lastKey = key;
-      if (st === 'target') banner('target', 'Waypoint reached: ' + near.name + '.');
-      else if (st === 'dune-warning') banner('alert', GIS_DUNE_WARNING);
+      if (st === 'dune-warning') banner('alert', GIS_DUNE_WARNING);
+      else if (oxygenLow) banner('alert', GIS_OXYGEN_WARNING);
+      else if (st === 'target') banner('target', 'Waypoint reached: ' + near.name + '.');
       else if (st === 'danger') banner('alert', 'PLANNING EXCLUSION: follow the configured traverse around the crater margin.');
       else if (st === 'weak') banner('weak', 'SIGNAL: terrain obstruction. Orbiter relay in use.');
       else banner('ok', 'ROUTE STATUS: within the configured traverse corridor.');
@@ -1336,10 +1351,6 @@
       });
       render(near)
     }
-    if (walkSimulationActive) {
-      o2 = Math.max(50, Math.round(100 - (cur / TL) * 50));
-    }
-    T.o2 = o2;
     slider.value = Math.round(cur / TL * 1000);
     slider.setAttribute('aria-valuetext', km.toFixed(1) + ' km');
     $('#simKm').textContent = km.toFixed(1) + ' km of 8.3 km';
@@ -1705,6 +1716,40 @@
       setLayerControl(b.dataset.l, on);
     })
   });
+  document.addEventListener('oreway:spe-start', function () {
+    if (solarParticleEventActive) return;
+    if (!gisMap || !gisAstronaut) {
+      banner('warn', 'Initialize Surface Telemetry before simulating a Solar Particle Event.');
+      document.dispatchEvent(new CustomEvent('oreway:spe-rejected'));
+      return;
+    }
+    resetWalkSimulation();
+    stopAuto();
+    cancelAnimationFrame(anim);
+    guideBeforeSolarEvent = guide;
+    solarParticleEventActive = true;
+    riskHasInput = true;
+    guide = true;
+    $('#guideBtn').classList.add('live');
+    $('#guideBtn').setAttribute('aria-pressed', 'true');
+    openMenu(false);
+    update();
+    banner(
+      'alert',
+      'SOLAR PARTICLE EVENT SIMULATION: Elevated radiation risk. Return to Base Camp using emergency guidance.'
+    );
+  });
+  document.addEventListener('oreway:spe-reset', function () {
+    if (!solarParticleEventActive) return;
+    solarParticleEventActive = false;
+    guide = guideBeforeSolarEvent;
+    guideBeforeSolarEvent = false;
+    riskHasInput = true;
+    $('#guideBtn').classList.toggle('live', guide);
+    $('#guideBtn').setAttribute('aria-pressed', guide);
+    update();
+    banner('ok', 'Solar Particle Event simulation reset. Risk recalculated from active layers.');
+  });
   /* === 11. Overview transition and reset === */
   var mapTransitionTimer = 0;
   function begin() {
@@ -1728,6 +1773,9 @@
   $('#overviewBtn').addEventListener('click', function () {
     clearTimeout(mapTransitionTimer);
     openMenu(false);
+    if (solarParticleEventActive) {
+      document.dispatchEvent(new CustomEvent('oreway:spe-reset'));
+    }
     resetWalkSimulation();
     stopAuto();
     cancelAnimationFrame(anim);
