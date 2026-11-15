@@ -142,6 +142,12 @@
         instrument: 'Compact Reconnaissance Imaging Spectrometer for Mars',
         source: 'NASA MRO CRISM archive',
         sourceUrl: 'https://pds-geosciences.wustl.edu/missions/mro/crism.htm'
+      },
+      radiation: {
+        id: 'radiation',
+        label: 'Radiation Risk',
+        instrument: 'Illustrative surface-exposure model',
+        source: 'Procedural crater-rim and terrain-shielding proxy'
       }
     },
     processed: null,

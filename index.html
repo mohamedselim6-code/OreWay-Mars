@@ -103,6 +103,7 @@
                 <canvas class="lyr on" id="c_mola"></canvas>
                 <canvas class="lyr" id="c_thermal"></canvas>
                 <canvas class="lyr" id="c_crism"></canvas>
+                <canvas class="lyr" id="c_radiation"></canvas>
               </div>
               <svg
                 class="ov"
@@ -318,6 +319,14 @@
           <span class="st">OFF</span>
           <span class="knob"></span>
         </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="radiation">
+          <span class="t">
+            <b>Radiation Risk</b>
+            <small>Illustrative exposure proxy near crater rims and open terrain</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
 
         <h3>2. Route &amp; Navigation</h3>
         <button class="big home" id="guideBtn" type="button" aria-pressed="false">
@@ -413,6 +422,10 @@
           <li>
             <h3>Rule 4 (Oxygen &amp; Signal Rule)</h3>
             <p>Begin return to Base Camp before oxygen drops below 50%. Orbiter relay activates automatically if terrain blocks radio signal (Signal Delay: 14m 20s).</p>
+          </li>
+          <li>
+            <h3>Rule 5 (Radiation - Solar Particle Events)</h3>
+            <p>During Solar Particle Events (SPE), avoid high-radiation zones near crater rims and exposed terrain. Use sheltered areas and follow mission radiation guidance.</p>
           </li>
         </ol>
         <button class="briefing-init" id="briefingDismiss" type="button">Initialize Surface Telemetry</button>

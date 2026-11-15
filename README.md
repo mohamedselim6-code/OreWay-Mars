@@ -26,6 +26,10 @@ the suit-oxygen readout from 100% to 50%. A 600 m Dark Dunes geofence raises a
 map warning and audio cue. Night Ops applies a darker thermal filter and
 enables the illustrative THEMIS layer.
 
+The optional Radiation Risk layer is a procedural visualization of relative
+exposure near crater rims and open terrain; it is not measured radiation data.
+During Solar Particle Events, follow mission guidance and seek sheltered areas.
+
 ## NASA data sources
 
 Use the archives to locate and download products, then verify product documentation, coordinate reference systems, units, and processing history before use:

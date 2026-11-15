@@ -761,13 +761,18 @@
       [target.latitude - map.latitudeSpan / 2, target.longitude - map.longitudeSpan / 2],
       [target.latitude + map.latitudeSpan / 2, target.longitude + map.longitudeSpan / 2]
     ];
-    ['thermal', 'crism'].forEach(function (id) {
+    ['thermal', 'crism', 'radiation'].forEach(function (id) {
       if (gisCanvasLayers[id]) return;
       var canvas = $('#c_' + id), overlay = window.L.imageOverlay(canvas.toDataURL(), bounds, {
         pane: 'illustrativeRasters',
         opacity: .5,
         interactive: false,
-        alt: id === 'thermal' ? 'Illustrative THEMIS thermal proxy': 'Illustrative CRISM spectral proxy'
+        alt: id === 'thermal'
+          ? 'Illustrative THEMIS thermal proxy'
+          : id === 'crism'
+            ? 'Illustrative CRISM spectral proxy'
+            : 'Illustrative radiation-risk heatmap',
+        className: id === 'radiation' ? 'gis-radiation-overlay': ''
       });
       gisCanvasLayers[id] = overlay;
       var control = $('.sw[data-l="' + id + '"]');
@@ -1133,10 +1138,16 @@
     crism: '<h4>CRISM · spectral units</h4>' +
       '<p><i style="background:#c49a5b"></i>Fe-Ti-bearing unit</p>' +
       '<p><i style="background:#68a9bd"></i>Hydrated silica proxy</p>' +
-      '<p><i style="background:#ad83a9"></i>Altered terrain proxy</p>'
+      '<p><i style="background:#ad83a9"></i>Altered terrain proxy</p>',
+    radiation: '<h4>Radiation Risk · illustrative</h4>' +
+      '<div class="lgl"><span>Green = Low</span><span>Red = High Radiation</span></div>' +
+      '<div class="rad-grad" role="img" aria-label="Green indicates low risk; red indicates high radiation risk"></div>'
   };
   function legend() {
-    $('#legend').innerHTML = LG[LAY[LAY.length - 1] || 'def']
+    var activeLegend = LAY.indexOf('radiation') >= 0
+      ? 'radiation'
+      : LAY[LAY.length - 1] || 'def';
+    $('#legend').innerHTML = LG[activeLegend]
   }
   function layerOn(id, on) {
     LAY = LAY.filter(function (x) {
@@ -1203,6 +1214,9 @@
       }, {
         canvas: $('#c_crism'),
         enabled: $('#c_crism').classList.contains('on')
+      }, {
+        canvas: $('#c_radiation'),
+        enabled: $('#c_radiation').classList.contains('on')
       }],
       routePath: route.getAttribute('d'),
       stations: ST.map(function (station) {
@@ -1361,7 +1375,7 @@
       if (h[k] < mn) mn = h[k];
       if (h[k] > mx) mx = h[k]
     }
-    var cs = ['cBase', 'c_mola', 'c_thermal', 'c_crism'].map(function (id) {
+    var cs = ['cBase', 'c_mola', 'c_thermal', 'c_crism', 'c_radiation'].map(function (id) {
       var c = $('#' + id);
       c.width = W;
       c.height = H;
@@ -1435,6 +1449,18 @@
           geologyColor = [173, 131, 169];
         }
         put(cs[3], pixel, geologyColor || [0, 0, 0], geologyColor ? 145 : 0);
+
+        var craterRimDistance = Math.hypot(X - 400, Y - 330);
+        var craterRimRisk = Math.exp(-Math.pow((craterRimDistance - 78) / 18, 2));
+        var exposedTerrainRisk = O.sstep(.35, .8, elevation) *
+          (.55 + .45 * O.sstep(.35, .65, a[k]));
+        var radiationRisk = Math.max(craterRimRisk, exposedTerrainRisk);
+        var radiationColor = O.mix(
+          [16, 185, 129],
+          [239, 68, 68],
+          radiationRisk
+        );
+        put(cs[4], pixel, radiationColor, 65 + radiationRisk * 145);
       }
     }
     cs.forEach(function (L) {

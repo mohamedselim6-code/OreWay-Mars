@@ -1807,6 +1807,13 @@ h1 {
   background: linear-gradient(90deg,#26354A,#527E8C,#9C896B,#D6B86A)
 }
 
+.rad-grad {
+  height: 10px;
+  margin: .3rem 0 .2rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg,#10B981,#F59E0B,#EF4444)
+}
+
 .scrim {
   background: rgba(2,6,23,.64)
 }
@@ -2001,6 +2008,10 @@ body.dayops .legend {
 .world.night .leaflet-tile-pane,
 .world.night .leaflet-image-layer {
   filter: brightness(.42) saturate(.9) hue-rotate(-12deg)
+}
+
+.world.night .gis-radiation-overlay {
+  filter: none
 }
 
 .world .leaflet-control {
