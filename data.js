@@ -1,4 +1,4 @@
-/* Reference geometry, science-layer metadata, and raster-sample validation. */
+/* Mission geometry, NASA data endpoints, and raster-sample validation. */
 (function (global) {
   'use strict';
   var data = {
@@ -23,7 +23,7 @@
       id: 'base',
       marker: 'A',
       label: 'Base Camp Alpha',
-      subtitle: 'Safe Landing Zone',
+      subtitle: 'Landing Reference',
       x: 100,
       y: 580,
       anchor: 'middle',
@@ -31,13 +31,8 @@
       labelY: 628,
       km: 0,
       name: 'Base Camp Alpha',
-      tag: 'Safe landing zone',
-      note: 'Modeled flat terrain below 2° slope. Communications and rover support are located here.',
-      mineralProxies: [
-        ['Basaltic material', 55, '#a4522b'],
-        ['Iron-oxide unit', 30, '#d9743c'],
-        ['Pyroxene proxy', 15, '#9b82b7']
-      ]
+      tag: 'Landing reference point',
+      note: 'Configured landing and communications reference point. Confirm terrain conditions against the source products before mission use.'
     }, {
       id: 's1',
       marker: '1',
@@ -51,14 +46,7 @@
       km: 2.4,
       name: 'Site 1: Ti-Fe ridge',
       tag: 'Mineral assessment area',
-      resourceLabel: 'Ti-Fe unit',
-      note: 'Modeled ridge with a Ti-Fe spectral proxy. Loose surface material may affect traverse speed.',
-      mineralProxies: [
-        ['Ilmenite proxy', 34, '#c49a5b'],
-        ['Magnetite proxy', 24, '#6fb6ff'],
-        ['Hematite proxy', 20, '#c66f4c'],
-        ['Pyroxene proxy', 22, '#9b82b7']
-      ]
+      note: 'Configured mineral-assessment waypoint. No species-level composition is verified for this site in the regional CRISM catalog.'
     }, {
       id: 's2',
       marker: '2',
@@ -72,14 +60,7 @@
       km: 5.5,
       name: 'Site 2: Nili Patera',
       tag: 'Alteration assessment area',
-      resourceLabel: 'alteration unit',
-      note: 'Volcanic feature with a summit caldera. Hydrated-silica proxy is shown for assessment; local slopes may exceed 10°.',
-      mineralProxies: [
-        ['Copper-sulfide proxy', 30, '#4e9b86'],
-        ['Hydrated silica proxy', 34, '#68a9bd'],
-        ['Pyroxene proxy', 20, '#9b82b7'],
-        ['Olivine proxy', 16, '#6fdc7f']
-      ]
+      note: 'Configured alteration-assessment waypoint. The regional CRISM service does not report a species-level detection at this coordinate.'
     }, {
       id: 's3',
       marker: '3',
@@ -93,61 +74,64 @@
       km: 8.3,
       name: 'Site 3: Dark dunes',
       tag: 'Dune field assessment area',
-      resourceLabel: 'dark dune field',
-      note: 'Wind-shaped basaltic dunes. Loose sand may reduce mobility; remain on modeled traverse corridors.',
-      mineralProxies: [
-        ['Platinum-group proxy', 18, '#b6b6c8'],
-        ['Chromite proxy', 26, '#c28b68'],
-        ['Magnetite proxy', 30, '#6fb6ff'],
-        ['Basaltic material', 26, '#a4522b']
-      ]
+      note: 'Configured dune-avoidance waypoint. The exclusion geometry is a mission-planning feature, not a current NASA hazard product.'
     }],
     hazard: {
       id: 'haz',
-      name: 'Steep crater hazard',
-      tag: 'Avoid · modeled slope exceeds 10°',
+      name: 'Crater-margin planning exclusion',
+      tag: 'Planning feature · slope not evaluated',
       x: 400,
       y: 330,
       radius: 120,
       chips: [
-        ['Crater depth', '140 m'],
-        ['Wall slope', '38°'],
-        ['Assessment', 'Avoid']
+        ['Feature', 'Planning exclusion'],
+        ['Slope data', 'Not evaluated']
       ],
-      note: 'The mapped traverse follows the northern rim. Terrain and slope values are illustrative model outputs.',
-      mineralProxies: []
+      note: 'This exclusion geometry is configured for route planning. The MOLA color-shaded mosaic is not a slope-classification product.'
     },
     layers: {
       mola: {
         id: 'mola',
-        label: 'MOLA Topography & Slope Safety',
+        label: 'MOLA Color-Shaded Relief',
         instrument: 'Mars Orbiter Laser Altimeter',
-        source: 'NASA MGS MOLA archive',
-        sourceUrl: 'https://pds-geosciences.wustl.edu/missions/mgs/mola.html',
-        thresholdsDeg: {
-          safeMaxExclusive: 2,
-          cautionMaxInclusive: 10
-        }
+        source: 'NASA Mars Trek · MGS MOLA color-shaded relief',
+        sourceUrl: 'https://trek.nasa.gov/mars/',
+        tileUrl: 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg',
+        maxNativeZoom: 6
       },
       thermal: {
         id: 'thermal',
         label: 'THEMIS Thermal & Environment',
         instrument: 'Thermal Emission Imaging System',
-        source: 'NASA Mars Odyssey THEMIS archive',
-        sourceUrl: 'https://pds-geosciences.wustl.edu/missions/odyssey/themis.html'
+        source: 'NASA Mars Trek · THEMIS controlled IR mosaics',
+        sourceUrl: 'https://trek.nasa.gov/mars/',
+        dayTileUrl: 'https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png',
+        nightTileUrl: 'https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png',
+        maxNativeZoom: 9
       },
       crism: {
         id: 'crism',
         label: 'CRISM Mineral & Geology',
         instrument: 'Compact Reconnaissance Imaging Spectrometer for Mars',
-        source: 'NASA MRO CRISM archive',
-        sourceUrl: 'https://pds-geosciences.wustl.edu/missions/mro/crism.htm'
+        source: 'NASA Mars Trek hydrous-mineral detections catalog',
+        sourceUrl: 'https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0',
+        queryUrl: 'https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0/query',
+        regionalBounds: {
+          south: 5,
+          north: 12,
+          west: 64,
+          east: 75
+        },
+        classificationNote: 'Catalog classification only; species-level composition is not provided.'
       },
       radiation: {
         id: 'radiation',
         label: 'Radiation Risk',
-        instrument: 'Illustrative surface-exposure model',
-        source: 'Procedural crater-rim and terrain-shielding proxy'
+        instrument: 'Solar Energetic Particle events',
+        source: 'NASA DONKI',
+        sourceUrl: 'https://api.nasa.gov/DONKI/SEP',
+        lookbackDays: 30,
+        limitation: 'Event context only; DONKI does not provide local Mars surface dose.'
       }
     },
     processed: null,

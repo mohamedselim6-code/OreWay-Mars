@@ -4,7 +4,7 @@
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* === 1. Procedural Mars texture === */
+  /* === 1. Overview globe texture === */
   function hash(x, y, z) {
     var h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 1274126177)) | 0;
     h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -285,7 +285,7 @@
     btn.textContent = 'Initializing telemetry...';
     setTimeout(function () {
       btn.textContent = 'Telemetry initialized';
-      msg.textContent = 'Loading the Syrtis Major surface model';
+      msg.textContent = 'Loading NASA Mars Trek map layers';
       document.dispatchEvent(new CustomEvent('oreway:start'));
     }, 1100);
   });
@@ -294,7 +294,6 @@
 (function () {
   'use strict';
 
-  var O = window.__ore;
   var D = window.OreWayData;
   var Telemetry = window.OreWayTelemetry;
   var $ = function (s) {
@@ -318,8 +317,7 @@
       name: station.name,
       tag: station.tag,
       note: station.note,
-      m: station.mineralProxies,
-      mine: station.resourceLabel,
+      m: station.mineralProxies || [],
       routeLength: 0
     };
   });
@@ -330,7 +328,7 @@
     tag: hazardData.tag,
     chips: hazardData.chips,
     note: hazardData.note,
-    m: hazardData.mineralProxies
+    m: hazardData.mineralProxies || []
   };
   function fmt(k) {
     return '~' + Telemetry.traverseMetrics(k, D.map.traverseKm, 15, D.map.returnMinutes).returnMinutes + ' min'
@@ -459,18 +457,31 @@
     s3: 'Site 3: Dark Dunes'
   };
   var GIS_STATION_POPUPS = {
-    s1: 'Ti-Fe Ridge: Iron & Titanium. Safe extraction zone.',
-    s2: 'Nili Patera: Hydrated Silica (Opal) detected by CRISM. Ancient hydrothermal vent. Age: ~2.46 Ga.',
-    s3: 'Dark Dunes: Hazardous, moving sand dunes. Avoid.'
+    s1: 'Ti-Fe Ridge: Mineral composition is not verified for this coordinate in the regional CRISM catalog.',
+    s2: 'Nili Patera: No local CRISM detection is reported at this coordinate. The regional catalog contains a generic hydrous-mineral detection; it does not identify a mineral species.',
+    s3: 'Dark Dunes: Mission-planning exclusion area. No current NASA hazard product is loaded.'
   };
   var GIS_ROUTE = ST.map(function (station) {
     return GIS_STATIONS[station.id]
   });
-  var GIS_BASE_TILES = 'https://trek.nasa.gov/tiles/Mars/EQ/msss_atlas_simp_clon/1.0.0/default/default028mm/{z}/{y}/{x}.png';
-  var GIS_MOLA_TILES = 'https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg';
+  var GIS_BASE_TILES = D.layers.mola.tileUrl;
+  var GIS_THEMIS_DAY_TILES = D.layers.thermal.dayTileUrl;
+  var GIS_THEMIS_NIGHT_TILES = D.layers.thermal.nightTileUrl;
   var gisMap = null;
   var gisBaseLayer = null;
-  var gisMolaLayer = null;
+  var gisThemisDayLayer = null;
+  var gisThemisNightLayer = null;
+  var gisThemisReady = {
+    day: false,
+    night: false
+  };
+  var gisThemisTimeout = 0;
+  var gisCrismLayer = null;
+  var crismLoadState = 'idle';
+  var crismSavedView = null;
+  var sepEvents = [];
+  var sepLoadState = 'idle';
+  var sepStatusText = 'NASA DONKI event context; no surface dose measurement';
   var gisRouteLayer = null;
   var gisHazardLayer = null;
   var gisAstronaut = null;
@@ -478,13 +489,14 @@
   var gisRadarRenderer = null;
   var gisDuneWarningPopup = null;
   var gisGuideLayer = null;
-  var gisCanvasLayers = {};
   var gisTilesReady = false;
   var gisTileTimeout = 0;
   var GIS_DUNE_WARNING =
     'WARNING: Approaching Hazard Zone (Dark Dunes). Reroute Recommended.';
   var GIS_DUNE_WARNING_DISTANCE_M = 600;
   var GIS_RADAR_RADIUS_M = 250;
+  var GIS_RISK_SAMPLE_RADIUS_M = 250;
+  var GIS_RISK_HAZARD_RANGE_M = 1500;
   var GIS_HAZARD = [
     [8.416, 69.495],
     [8.416, 69.501],
@@ -508,6 +520,238 @@
   function setMapStatus(message) {
     $('#dataStatus').textContent = message
   }
+  function setRasterSampleStatus(message) {
+    $('#rasterSampleStatus').textContent = message
+  }
+  function setCrismStatus(message) {
+    $('#crismStatus').textContent = message
+  }
+  function setRadiationStatus(message) {
+    $('#radiationStatus').textContent = message
+  }
+  function fetchNASAJSON(url, source) {
+    var controller = typeof AbortController === 'function'
+      ? new AbortController()
+      : null;
+    var timeout = controller
+      ? setTimeout(function () {
+        controller.abort();
+      }, 20000)
+      : 0;
+    var options = {
+      cache: 'no-store'
+    };
+    if (controller) options.signal = controller.signal;
+    return fetch(url, options).then(function (response) {
+      if (!response.ok) {
+        throw new Error(source + ' request failed with HTTP ' + response.status + '.');
+      }
+      return response.json();
+    }).finally(function () {
+      if (timeout) clearTimeout(timeout);
+    });
+  }
+  function syncThemisLayer() {
+    if (!gisMap || !gisThemisDayLayer || !gisThemisNightLayer) return;
+    clearTimeout(gisThemisTimeout);
+    gisThemisTimeout = 0;
+    if (gisMap.hasLayer(gisThemisDayLayer)) gisMap.removeLayer(gisThemisDayLayer);
+    if (gisMap.hasLayer(gisThemisNightLayer)) gisMap.removeLayer(gisThemisNightLayer);
+    if (LAY.indexOf('thermal') < 0) return;
+    var night = world.classList.contains('night');
+    var layer = night ? gisThemisNightLayer : gisThemisDayLayer;
+    var period = night ? 'night' : 'day';
+    layer.addTo(gisMap);
+    if (!gisThemisReady[period]) {
+      setMapStatus('NASA Mars Trek · THEMIS ' + period.toUpperCase() + ' IR loading');
+      gisThemisTimeout = setTimeout(function () {
+        if (
+          LAY.indexOf('thermal') >= 0 &&
+          world.classList.contains('night') === night &&
+          !gisThemisReady[period]
+        ) {
+          setMapStatus('NASA THEMIS tiles are delayed; check the network connection.');
+        }
+      }, 8000);
+    }
+  }
+  function setCrismLayerVisible(on) {
+    if (!gisMap || !gisCrismLayer) return;
+    if (!on) {
+      if (gisMap.hasLayer(gisCrismLayer)) gisMap.removeLayer(gisCrismLayer);
+      if (crismSavedView) {
+        gisMap.setMinZoom(8);
+        gisMap.setView(crismSavedView.center, crismSavedView.zoom);
+        crismSavedView = null;
+      }
+      return;
+    }
+    if (!gisCrismLayer.getLayers().length || gisMap.hasLayer(gisCrismLayer)) return;
+    crismSavedView = {
+      center: gisMap.getCenter(),
+      zoom: gisMap.getZoom()
+    };
+    gisCrismLayer.addTo(gisMap);
+    var bounds = gisCrismLayer.getBounds();
+    GIS_ROUTE.forEach(function (point) {
+      bounds.extend(point);
+    });
+    gisMap.fitBounds(bounds, {
+      padding: [36, 36],
+      maxZoom: 8
+    });
+  }
+  function loadCrismDetections() {
+    if (crismLoadState !== 'idle') return;
+    crismLoadState = 'loading';
+    setCrismStatus('Loading NASA CRISM regional detections…');
+    var bounds = D.layers.crism.regionalBounds;
+    var params = new URLSearchParams({
+      where: "Instrument='CRISM' AND Latitude >= " + bounds.south +
+        ' AND Latitude <= ' + bounds.north +
+        ' AND Long_East >= ' + bounds.west +
+        ' AND Long_East <= ' + bounds.east,
+      outFields: 'Latitude,Long_East,Type,Instrument',
+      returnGeometry: 'false',
+      f: 'json'
+    });
+    fetchNASAJSON(
+      D.layers.crism.queryUrl + '?' + params.toString(),
+      'NASA CRISM catalog'
+    ).then(function (result) {
+      if (result.error) {
+        throw new Error(result.error.message || 'CRISM catalog returned an error.');
+      }
+      if (!Array.isArray(result.features)) {
+        throw new Error('CRISM catalog response did not contain a feature list.');
+      }
+      gisCrismLayer = window.L.featureGroup();
+      result.features.forEach(function (feature) {
+        var attributes = feature.attributes || {};
+        var latitude = Number(attributes.Latitude);
+        var longitude = Number(attributes.Long_East);
+        if (!isFinite(latitude) || !isFinite(longitude)) return;
+        var marker = window.L.circleMarker([latitude, longitude], {
+          radius: 7,
+          color: '#38BDF8',
+          weight: 2,
+          fillColor: '#0B0F19',
+          fillOpacity: 0.9
+        });
+        var content = document.createElement('div');
+        content.className = 'gis-popup-copy';
+        var classification = document.createElement('p');
+        classification.textContent =
+          (attributes.Instrument || 'CRISM') + ' catalog class: ' +
+          (attributes.Type || 'Unclassified detection');
+        content.appendChild(classification);
+        var location = document.createElement('p');
+        location.textContent =
+          'Location: ' + latitude.toFixed(3) + '°N, ' +
+          longitude.toFixed(3) + '°E';
+        content.appendChild(location);
+        var limitation = document.createElement('p');
+        limitation.textContent = D.layers.crism.classificationNote;
+        content.appendChild(limitation);
+        var source = document.createElement('a');
+        source.href = D.layers.crism.sourceUrl;
+        source.target = '_blank';
+        source.rel = 'noopener noreferrer';
+        source.textContent = 'NASA Mars Trek catalog';
+        content.appendChild(source);
+        marker.bindPopup(content, {
+          className: 'gis-science-popup'
+        });
+        marker.bindTooltip('CRISM · ' + (attributes.Type || 'Detection'));
+        marker.addTo(gisCrismLayer);
+      });
+      crismLoadState = 'loaded';
+      var count = gisCrismLayer.getLayers().length;
+      setCrismStatus(count
+        ? count + ' NASA catalog detection' + (count === 1 ? '' : 's') +
+          ' in the Syrtis regional query'
+        : 'No CRISM detections in the Syrtis regional query');
+      if (LAY.indexOf('crism') >= 0) setCrismLayerVisible(true);
+      legend();
+    }).catch(function (error) {
+      crismLoadState = 'error';
+      setCrismStatus('NASA CRISM catalog unavailable.');
+      console.error('Unable to load NASA CRISM detections:', error);
+      legend();
+    });
+  }
+  function updateSepLegend() {
+    if (sepLoadState === 'loading') {
+      sepStatusText = 'Loading NASA DONKI SEP events…';
+    } else if (sepLoadState === 'error') {
+      sepStatusText = 'NASA DONKI data unavailable. ' +
+        D.layers.radiation.limitation;
+    } else if (sepLoadState === 'loaded' && sepEvents.length) {
+      var latest = sepEvents[0].eventTime || 'date not reported';
+      sepStatusText = sepEvents.length + ' SEP event' +
+        (sepEvents.length === 1 ? '' : 's') + ' reported in the last ' +
+        D.layers.radiation.lookbackDays + ' days; latest ' + latest +
+        '. ' + D.layers.radiation.limitation;
+    } else if (sepLoadState === 'loaded') {
+      sepStatusText = 'No SEP events reported in the last ' +
+        D.layers.radiation.lookbackDays +
+        ' days. ' + D.layers.radiation.limitation;
+    }
+    if ($('#sepLegendStatus')) {
+      $('#sepLegendStatus').textContent = sepStatusText;
+    }
+    if ($('#sepLegendState')) {
+      $('#sepLegendState').textContent =
+        sepLoadState === 'loaded' && sepEvents.length
+          ? 'SEP events reported'
+          : sepLoadState === 'loaded'
+            ? 'No SEP events reported'
+            : 'Event status unavailable';
+      $('#sepLegendState').className =
+        sepLoadState === 'loaded' && sepEvents.length
+          ? 'sep-state sep-reported'
+          : sepLoadState === 'loaded'
+            ? 'sep-state sep-none'
+            : 'sep-state';
+    }
+    setRadiationStatus(sepStatusText);
+  }
+  function loadSepEvents() {
+    if (sepLoadState !== 'idle') return;
+    sepLoadState = 'loading';
+    updateSepLegend();
+    var end = new Date();
+    var start = new Date(end.getTime() -
+      D.layers.radiation.lookbackDays * 24 * 60 * 60 * 1000);
+    var params = new URLSearchParams({
+      startDate: start.toISOString().slice(0, 10),
+      endDate: end.toISOString().slice(0, 10),
+      api_key: 'DEMO_KEY'
+    });
+    fetchNASAJSON(
+      D.layers.radiation.sourceUrl + '?' + params.toString(),
+      'NASA DONKI'
+    ).then(function (events) {
+      if (!Array.isArray(events)) {
+        throw new Error('NASA DONKI response did not contain an event list.');
+      }
+      sepEvents = events.filter(function (event) {
+        return event && typeof event.eventTime === 'string';
+      }).sort(function (a, b) {
+        return b.eventTime.localeCompare(a.eventTime);
+      });
+      sepLoadState = 'loaded';
+      updateSepLegend();
+      legend();
+      if (simReady) update();
+    }).catch(function (error) {
+      sepLoadState = 'error';
+      updateSepLegend();
+      legend();
+      if (simReady) update();
+      console.error('Unable to load NASA DONKI SEP events:', error);
+    });
+  }
   function setupGisMap() {
     if (gisMap) {
       setTimeout(function () {
@@ -516,7 +760,7 @@
       return;
     }
     if (!window.L) {
-      setMapStatus('Leaflet unavailable · illustrative relief active');
+      setMapStatus('Leaflet unavailable; NASA map layers cannot be displayed.');
       return;
     }
     var L = window.L;
@@ -535,8 +779,8 @@
       maxBoundsViscosity: 1
     }).setView(GIS_STATIONS.base, 11);
     gisMap.setMaxBounds([[-90, -180], [90, 180]]);
-    gisMap.createPane('illustrativeRasters');
-    gisMap.getPane('illustrativeRasters').style.zIndex = 350;
+    gisMap.createPane('scienceRasters');
+    gisMap.getPane('scienceRasters').style.zIndex = 350;
     L.control.zoom({
       position: 'topleft'
     }).addTo(gisMap);
@@ -549,40 +793,77 @@
     gisBaseLayer = L.tileLayer(GIS_BASE_TILES, {
       minZoom: 8,
       maxZoom: 12,
-      maxNativeZoom: 6,
+      maxNativeZoom: D.layers.mola.maxNativeZoom,
       tileSize: 256,
-      attribution: 'Imagery: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · MGS MOC</a>'
+      attribution: 'Topography: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · MGS MOLA</a>'
     }).addTo(gisMap);
-    // Keep procedural relief visible until imagery arrives or the timeout expires.
     gisBaseLayer.on('tileload', function () {
       if (gisTilesReady) return;
       clearTimeout(gisTileTimeout);
       gisTileTimeout = 0;
       gisTilesReady = true;
-      $('#world').classList.add('tiles-ready');
-      $('#mapFallback').setAttribute('aria-hidden', 'true');
-      setMapStatus('NASA Mars Trek · MGS MOC global mosaic');
+      setMapStatus('NASA Mars Trek · MOLA color-shaded relief');
     });
     gisBaseLayer.on('tileerror', function () {
       if (!gisTilesReady) {
         clearTimeout(gisTileTimeout);
         gisTileTimeout = 0;
-        setMapStatus('NASA tiles unavailable · illustrative relief active');
+        setMapStatus('NASA MOLA tiles are not responding; no alternate terrain layer is shown.');
       }
     });
     gisTileTimeout = setTimeout(function () {
       if (!gisTilesReady) {
-        setMapStatus('NASA imagery delayed · illustrative relief active');
+        setMapStatus('NASA MOLA tiles are delayed; check the network connection.');
       }
     }, 8000);
-    gisMolaLayer = L.tileLayer(GIS_MOLA_TILES, {
+    gisThemisDayLayer = L.tileLayer(GIS_THEMIS_DAY_TILES, {
       minZoom: 8,
       maxZoom: 12,
-      maxNativeZoom: 7,
+      maxNativeZoom: D.layers.thermal.maxNativeZoom,
       tileSize: 256,
-      opacity: .38,
-      attribution: 'Topography: <a href="https://pds-geosciences.wustl.edu/missions/mgs/mola.html">NASA MGS MOLA</a>'
-    }).addTo(gisMap);
+      opacity: .72,
+      pane: 'scienceRasters',
+      attribution: 'Day IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · THEMIS</a>'
+    });
+    gisThemisNightLayer = L.tileLayer(GIS_THEMIS_NIGHT_TILES, {
+      minZoom: 8,
+      maxZoom: 12,
+      maxNativeZoom: D.layers.thermal.maxNativeZoom,
+      tileSize: 256,
+      opacity: .72,
+      pane: 'scienceRasters',
+      attribution: 'Night IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · THEMIS</a>'
+    });
+    gisThemisDayLayer.on('tileload', function () {
+      gisThemisReady.day = true;
+      if (LAY.indexOf('thermal') >= 0 && !world.classList.contains('night')) {
+        clearTimeout(gisThemisTimeout);
+        gisThemisTimeout = 0;
+        setMapStatus('NASA Mars Trek · THEMIS Day IR controlled mosaic');
+      }
+    });
+    gisThemisNightLayer.on('tileload', function () {
+      gisThemisReady.night = true;
+      if (LAY.indexOf('thermal') >= 0 && world.classList.contains('night')) {
+        clearTimeout(gisThemisTimeout);
+        gisThemisTimeout = 0;
+        setMapStatus('NASA Mars Trek · THEMIS Night IR controlled mosaic');
+      }
+    });
+    gisThemisDayLayer.on('tileerror', function () {
+      if (LAY.indexOf('thermal') >= 0 && !world.classList.contains('night')) {
+        clearTimeout(gisThemisTimeout);
+        gisThemisTimeout = 0;
+        setMapStatus('NASA THEMIS Day IR tiles are unavailable.');
+      }
+    });
+    gisThemisNightLayer.on('tileerror', function () {
+      if (LAY.indexOf('thermal') >= 0 && world.classList.contains('night')) {
+        clearTimeout(gisThemisTimeout);
+        gisThemisTimeout = 0;
+        setMapStatus('NASA THEMIS Night IR tiles are unavailable.');
+      }
+    });
     gisRouteLayer = L.polyline(GIS_ROUTE, {
       color: '#10B981',
       weight: 4,
@@ -590,7 +871,7 @@
       lineCap: 'round',
       lineJoin: 'round'
     }).addTo(gisMap);
-    gisRouteLayer.bindTooltip('Safe traverse · 8.3 km');
+    gisRouteLayer.bindTooltip('Configured traverse · 8.3 km');
     gisHazardLayer = L.polygon(GIS_HAZARD, {
       color: '#EF4444',
       weight: 2,
@@ -598,7 +879,7 @@
       fillColor: '#EF4444',
       fillOpacity: .2
     }).addTo(gisMap);
-    gisHazardLayer.bindTooltip('Crater hazard · modeled steep terrain');
+    gisHazardLayer.bindTooltip('Crater-margin planning exclusion · slope not evaluated');
     gisHazardLayer.on('click', function () {
       pick('haz')
     });
@@ -639,6 +920,7 @@
       })
     }).addTo(gisMap);
     gisAstronaut.on('dragend', function () {
+      riskHasInput = true;
       var point = gisMap.latLngToLayerPoint(gisAstronaut.getLatLng());
       var bestDistance = Infinity;
       var bestLength = cur;
@@ -683,7 +965,6 @@
         gisMap.invalidateSize()
       }, 350)
     });
-    installCanvasGisLayers();
   }
   function gisPositionAtRouteLength(length) {
     for (var i = 1; i < ST.length; i++) {
@@ -755,30 +1036,6 @@
     }
     return position;
   }
-  function installCanvasGisLayers() {
-    if (!gisMap || !built) return;
-    var bounds = [
-      [target.latitude - map.latitudeSpan / 2, target.longitude - map.longitudeSpan / 2],
-      [target.latitude + map.latitudeSpan / 2, target.longitude + map.longitudeSpan / 2]
-    ];
-    ['thermal', 'crism', 'radiation'].forEach(function (id) {
-      if (gisCanvasLayers[id]) return;
-      var canvas = $('#c_' + id), overlay = window.L.imageOverlay(canvas.toDataURL(), bounds, {
-        pane: 'illustrativeRasters',
-        opacity: .5,
-        interactive: false,
-        alt: id === 'thermal'
-          ? 'Illustrative THEMIS thermal proxy'
-          : id === 'crism'
-            ? 'Illustrative CRISM spectral proxy'
-            : 'Illustrative radiation-risk heatmap',
-        className: id === 'radiation' ? 'gis-radiation-overlay': ''
-      });
-      gisCanvasLayers[id] = overlay;
-      var control = $('.sw[data-l="' + id + '"]');
-      if (control && control.getAttribute('aria-checked') === 'true') overlay.addTo(gisMap);
-    });
-  }
   /* === 6. Traverse position and mission readouts === */
   var cur = 0, anim = 0, astro = $('#astro');
   function place() {
@@ -806,14 +1063,15 @@
   place();
   var sel = 'base';
   function render(s) {
-    var night = $('#world').classList.contains('night'), h = s.id === 'haz';
+    var h = s.id === 'haz';
     var sample = h ? null: D.getProcessedStation(s.id);
     var arrival = Telemetry.traverseMetrics(s.km || 0, map.traverseKm, 15, map.returnMinutes).oxygenPercent;
+    var coordinates = h ? null : GIS_STATIONS[s.id];
     var ch = h ? s.chips : [
       ['Distance', s.km + ' km'],
       ['Walk time', fmt(s.km)],
       ['Suit O₂ on arrival', arrival + '%'],
-      ['Surface temp', night ? '-73°C' : '-23°C']
+      ['Coordinates', coordinates[0].toFixed(3) + '°N, ' + coordinates[1].toFixed(3) + '°E']
     ];
     var sampleNote = '';
     if (
@@ -839,7 +1097,7 @@
         '" style="background:' + m[2] + '"></i></div><b>' +
         m[1] + '%</b></div>'
     }).join('') + '<p class="note">' + s.note + '</p>' + sampleNote +
-    '<p class="fn">Illustrative planning model; not operational mission data.</p>';
+    '<p class="fn">Route and traverse values are mission-planning parameters, not instrument measurements.</p>';
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         $$('.bar2 i').forEach(function (i) {
@@ -848,8 +1106,9 @@
       })
     });
   }
-  function pick(id, cb) {
+  function pick(id, cb, enableRisk) {
     resetWalkSimulation();
+    riskHasInput = enableRisk !== false;
     var s = id === 'haz' ? HAZ: ST.filter(function (x) {
       return x.id === id
     })[0];
@@ -859,6 +1118,7 @@
     });
     render(s);
     if (id !== 'haz') moveTo(s.len, cb);
+    else update();
   }
   $('#haz').addEventListener('click', function () {
     pick('haz')
@@ -875,9 +1135,91 @@
     o2: 100,
     ret: 0,
     weak: false
-  }, simReady = false, auto = 0, walkAnimation = 0, walkSimulationActive = false,
+  }, riskScore = 0, riskHasInput = false, simReady = false, auto = 0,
+  walkAnimation = 0, walkSimulationActive = false,
   duneWarningActive = false, nightThermalAuto = false,
   audio = Telemetry.createAudioUtilities(), ambientOn = false;
+  function setRiskScore(score) {
+    riskScore = Math.max(0, Math.min(100, Math.round(score)));
+    var value = $('#riskScore');
+    value.textContent = String(riskScore);
+    value.classList.remove('risk-low', 'risk-moderate', 'risk-high');
+    var level = riskScore < 30
+      ? 'risk-low'
+      : riskScore <= 70
+        ? 'risk-moderate'
+        : 'risk-high';
+    value.classList.add(level);
+    value.setAttribute(
+      'aria-label',
+      'Risk score ' + riskScore + ' out of 100; planning index, not a measured value'
+    );
+  }
+  function localSlopeRisk(lat, lng) {
+    var nearestSlope = null;
+    var nearestDistance = Infinity;
+    ST.forEach(function (station) {
+      var sample = D.getProcessedStation(station.id);
+      var coordinates = GIS_STATIONS[station.id];
+      if (!sample || typeof sample.slopeDegrees !== 'number') return;
+      var distance = marsDistance(
+        window.L.latLng(lat, lng),
+        window.L.latLng(coordinates[0], coordinates[1])
+      );
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestSlope = sample.slopeDegrees;
+      }
+    });
+    if (
+      nearestSlope === null ||
+      nearestDistance > GIS_RISK_SAMPLE_RADIUS_M
+    ) return null;
+    if (nearestSlope < 2) return nearestSlope * 5;
+    if (nearestSlope <= 10) return 10 + (nearestSlope - 2) * 3.75;
+    return 40 + Math.min(20, (nearestSlope - 10) * 2);
+  }
+  function configuredHazardRisk(lat, lng) {
+    var south = 90, north = -90, west = 180, east = -180;
+    GIS_HAZARD.forEach(function (point) {
+      south = Math.min(south, point[0]);
+      north = Math.max(north, point[0]);
+      west = Math.min(west, point[1]);
+      east = Math.max(east, point[1]);
+    });
+    var nearestLat = Math.max(south, Math.min(north, lat));
+    var nearestLng = Math.max(west, Math.min(east, lng));
+    var distance = lat >= south && lat <= north && lng >= west && lng <= east
+      ? 0
+      : marsDistance(
+        window.L.latLng(lat, lng),
+        window.L.latLng(nearestLat, nearestLng)
+      );
+    return 60 * Math.max(0, 1 - distance / GIS_RISK_HAZARD_RANGE_M);
+  }
+  function calculateRisk(lat, lng) {
+    if (!isFinite(lat) || !isFinite(lng)) {
+      throw new TypeError('Risk calculation requires finite latitude and longitude.');
+    }
+    var score = 0;
+    if (LAY.indexOf('mola') >= 0) {
+      var slopeRisk = localSlopeRisk(lat, lng);
+      score += slopeRisk === null
+        ? configuredHazardRisk(lat, lng)
+        : slopeRisk;
+    }
+    if (LAY.indexOf('thermal') >= 0) {
+      score += world.classList.contains('night') ? 20 : 10;
+    }
+    if (LAY.indexOf('radiation') >= 0) {
+      if (sepLoadState === 'loaded' && sepEvents.length) {
+        score += 25;
+      } else if (sepLoadState === 'loading' || sepLoadState === 'error') {
+        score += 10;
+      }
+    }
+    return Math.max(0, Math.min(100, Math.round(score)));
+  }
   function banner(c, t) {
     $('#banner').className = 'alertbar ' + c;
     $('#bmsg').textContent = t
@@ -936,6 +1278,9 @@
       : (map.traverseKm - kmAt(cur)) * 1000;
     var approachingDunes =
       walkSimulationActive && duneDistance <= GIS_DUNE_WARNING_DISTANCE_M;
+    if (riskHasInput && gisPosition) {
+      setRiskScore(calculateRisk(gisPosition.lat, gisPosition.lng));
+    }
     if (approachingDunes && !duneWarningActive) {
       duneWarningActive = true;
       showDuneWarning(gisPosition);
@@ -960,11 +1305,11 @@
     var key = st + (near ? near.id: '');
     if (key !== lastKey) {
       lastKey = key;
-      if (st === 'target') banner('target', 'SITE REACHED: ' + near.mine + ' assessment point.');
+      if (st === 'target') banner('target', 'Waypoint reached: ' + near.name + '.');
       else if (st === 'dune-warning') banner('alert', GIS_DUNE_WARNING);
-      else if (st === 'danger') banner('alert', 'SLOPE HAZARD: steep crater margin ahead. Follow the mapped traverse.');
+      else if (st === 'danger') banner('alert', 'PLANNING EXCLUSION: follow the configured traverse around the crater margin.');
       else if (st === 'weak') banner('weak', 'SIGNAL: terrain obstruction. Orbiter relay in use.');
-      else banner('ok', 'ROUTE STATUS: within the modeled safe-slope corridor.');
+      else banner('ok', 'ROUTE STATUS: within the configured traverse corridor.');
     }
     $('#haz').classList.toggle('alerting', st === 'danger');
     if (gisHazardLayer) gisHazardLayer.setStyle({
@@ -1046,6 +1391,7 @@
   }
   slider.addEventListener('input', function () {
     resetWalkSimulation();
+    riskHasInput = true;
     stopAuto();
     cancelAnimationFrame(anim);
     cur = slider.value / 1000 * TL;
@@ -1058,6 +1404,7 @@
   });
   $('#autoBtn').addEventListener('click', function () {
     resetWalkSimulation();
+    riskHasInput = true;
     if (auto) {
       stopAuto();
       return
@@ -1083,6 +1430,7 @@
       stopWalk();
       return;
     }
+    riskHasInput = true;
     stopAuto();
     cancelAnimationFrame(anim);
     if (!walkSimulationActive || cur >= TL - 1) {
@@ -1124,51 +1472,78 @@
   /* === 8. Layer controls and map legend === */
   var PINS =
     '<div class="keygrid">' +
-    '<p><i style="background:#5aa77a"></i>Route</p>' +
-    '<p><i style="background:#4b9167"></i>Safe &lt;2°</p>' +
-    '<p><i style="background:#c49a5b"></i>Caution 2–10°</p>' +
-    '<p><i style="background:#b7656d"></i>Hazard &gt;10°</p>' +
+    '<p><i style="background:#10B981"></i>Configured traverse</p>' +
     '<p>Markers: sites</p></div>';
   var LG = {
     def: '<h4>Map legend</h4>' + PINS,
-    mola: '<h4>MOLA · elevation &amp; slope</h4>' + PINS,
-    thermal: '<h4>THEMIS · thermal inertia</h4>' +
-      '<div class="lgrad"></div><div class="lgl">' +
-      '<span>Lower inertia</span><span>Higher inertia</span></div>',
-    crism: '<h4>CRISM · spectral units</h4>' +
-      '<p><i style="background:#c49a5b"></i>Fe-Ti-bearing unit</p>' +
-      '<p><i style="background:#68a9bd"></i>Hydrated silica proxy</p>' +
-      '<p><i style="background:#ad83a9"></i>Altered terrain proxy</p>',
-    radiation: '<h4>Radiation Risk · illustrative</h4>' +
-      '<div class="lgl"><span>Green = Low</span><span>Red = High Radiation</span></div>' +
-      '<div class="rad-grad" role="img" aria-label="Green indicates low risk; red indicates high radiation risk"></div>'
+    mola: '<h4>MOLA · color-shaded relief</h4>' +
+      '<p>Global 463 m mosaic. This layer does not classify slope.</p>' + PINS,
+    thermal: '<h4>THEMIS · IR mosaics</h4>' +
+      '<p id="themisLegendStatus">Day IR controlled mosaic selected.</p>' +
+      '<p>100 m products; not current surface-temperature measurements.</p>',
+    crism: '<h4>CRISM · catalog detections</h4>' +
+      '<p id="crismLegendStatus">Regional catalog not queried.</p>' +
+      '<p>Catalog classes do not identify mineral species.</p>',
+    radiation: '<h4>NASA DONKI · SEP events</h4>' +
+      '<p id="sepLegendStatus">NASA DONKI event context; no surface dose measurement</p>' +
+      '<p id="sepLegendState" class="sep-state">Event status unavailable</p>' +
+      '<p><i style="background:#10B981"></i>No event reported in query window</p>' +
+      '<p><i style="background:#EF4444"></i>SEP event reported in query window</p>' +
+      '<p>Global event context only; not a Mars surface-dose map.</p>' +
+      '<p><a href="https://api.nasa.gov/DONKI/SEP" target="_blank" rel="noopener noreferrer">NASA DONKI SEP API</a></p>'
   };
   function legend() {
     var activeLegend = LAY.indexOf('radiation') >= 0
       ? 'radiation'
       : LAY[LAY.length - 1] || 'def';
-    $('#legend').innerHTML = LG[activeLegend]
+    $('#legend').innerHTML = LG[activeLegend];
+    if (activeLegend === 'radiation') updateSepLegend();
+    if (activeLegend === 'thermal') {
+      $('#themisLegendStatus').textContent = world.classList.contains('night')
+        ? 'Night IR controlled mosaic selected.'
+        : 'Day IR controlled mosaic selected.';
+    }
+    if (activeLegend === 'crism') {
+      $('#crismLegendStatus').textContent = $('#crismStatus').textContent;
+    }
   }
   function layerOn(id, on) {
+    riskHasInput = true;
     LAY = LAY.filter(function (x) {
       return x !== id
     });
     if (on) LAY.push(id);
-    if (gisMap && id === 'mola' && gisMolaLayer) {
-      if (on) gisMolaLayer.addTo(gisMap);
-      else gisMap.removeLayer(gisMolaLayer);
+    if (gisMap && id === 'mola' && gisBaseLayer) {
+      if (on) {
+        gisBaseLayer.addTo(gisMap);
+      } else {
+        gisMap.removeLayer(gisBaseLayer);
+        setMapStatus('MOLA layer hidden; no alternate base layer is selected.');
+      }
     }
-    if (gisMap && gisCanvasLayers[id]) {
-      if (on) gisCanvasLayers[id].addTo(gisMap);
-      else gisMap.removeLayer(gisCanvasLayers[id]);
+    if (id === 'thermal') {
+      syncThemisLayer();
+    } else if (id === 'crism') {
+      if (on) {
+        if (crismLoadState === 'idle' || crismLoadState === 'error') {
+          crismLoadState = 'idle';
+          loadCrismDetections();
+        }
+        else if (crismLoadState === 'loaded') setCrismLayerVisible(true);
+      } else {
+        setCrismLayerVisible(false);
+      }
+    } else if (id === 'radiation' && on) {
+      if (sepLoadState === 'error') sepLoadState = 'idle';
+      loadSepEvents();
     }
     legend();
+    if (simReady) update();
   }
   function setLayerControl(id, on) {
     var control = $('.sw[data-l="' + id + '"]');
     control.setAttribute('aria-checked', on);
     control.querySelector('.st').textContent = on ? 'ON': 'OFF';
-    $('#c_' + id).classList.toggle('on', on);
     layerOn(id, on);
   }
   /* === 9. Audio alerts and mission snapshot === */
@@ -1204,20 +1579,6 @@
   function snap() {
     var point = route.getPointAtLength(cur);
     var url = Telemetry.createSnapshot({
-      mapCanvas: $('#cBase'),
-      layerCanvases: [{
-        canvas: $('#c_mola'),
-        enabled: $('#c_mola').classList.contains('on')
-      }, {
-        canvas: $('#c_thermal'),
-        enabled: $('#c_thermal').classList.contains('on')
-      }, {
-        canvas: $('#c_crism'),
-        enabled: $('#c_crism').classList.contains('on')
-      }, {
-        canvas: $('#c_radiation'),
-        enabled: $('#c_radiation').classList.contains('on')
-      }],
       routePath: route.getAttribute('d'),
       stations: ST.map(function (station) {
         return {
@@ -1255,12 +1616,15 @@
   legend();
   update();
   function loadProcessedDataset() {
-    if (location.protocol === 'file:') return;
+    if (location.protocol === 'file:') {
+      setRasterSampleStatus('Use HTTP to load local raster samples');
+      return;
+    }
     fetch('./nasa_surface_data.json', {
       cache: 'no-store'
     }).then(function (response) {
       if (response.status === 404) {
-        $('#dataStatus').textContent = 'Illustrative relief · no processed raster dataset';
+        setRasterSampleStatus('No local raster samples');
         return null;
       }
       if (!response.ok) throw new Error('Dataset request failed with HTTP ' + response.status + '.');
@@ -1272,23 +1636,24 @@
         Array.isArray(dataset.stations) &&
         dataset.stations.length === 0
       ) {
-        $('#dataStatus').textContent =
-          'Illustrative relief · no processed raster samples';
+        setRasterSampleStatus('No local raster samples');
         return;
       }
       D.setProcessedDataset(dataset);
-      $('#dataStatus').textContent = 'Raster statistics loaded · map remains illustrative';
+      setRasterSampleStatus('NASA raster samples loaded');
       render(sel === 'haz' ? HAZ: ST.filter(function (x) {
         return x.id === sel
       })[0]);
+      if (riskHasInput && simReady) update();
     }).catch(function (error) {
-      $('#dataStatus').textContent = 'Raster dataset unavailable · illustrative relief active';
+      setRasterSampleStatus('Local raster samples unavailable');
       console.error('Unable to load processed Mars raster data:', error);
     });
   }
   loadProcessedDataset();
   /* === 10. Operations mode and mission drawer === */
   $('#modeBtn').addEventListener('click', function () {
+    riskHasInput = true;
     var n = $('#world').classList.toggle('night');
     document.body.classList.toggle('dayops', !n);
     this.setAttribute('aria-pressed', n);
@@ -1301,15 +1666,14 @@
       setLayerControl('thermal', false);
       nightThermalAuto = false;
     }
+    syncThemisLayer();
+    legend();
     update();
     render(sel === 'haz' ? HAZ: ST.filter(function (x) {
       return x.id === sel
     })[0]);
     if (n) {
-      banner(
-        'weak',
-        'Night Mode Active: Temp drops to -73°C. THEMIS thermal data engaged.'
-      );
+      banner('weak', 'Night Ops active: NASA THEMIS Night IR controlled mosaic selected.');
     }
   });
   var menu = $('#menu'), scrim = $('#scrim');
@@ -1341,146 +1705,14 @@
       setLayerControl(b.dataset.l, on);
     })
   });
-  /* === 11. Illustrative terrain and science-layer canvases === */
-  var built = false;
-  function seg(px, py, ax, ay, bx, by) {
-    var dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
-    return Math.hypot(px - ax - t * dx, py - ay - t * dy)
-  }
-  function ramp(t, s) {
-    t = Math.max(0, Math.min(.999, t)) * (s.length - 1);
-    var i = t | 0;
-    return O.mix(s[i], s[i + 1], t - i)
-  }
-  function build() {
-    if (built || !O) return;
-    built = true;
-    var W = 400, H = 350, N = W * H, h = new Float32Array(N), a = new Float32Array(N), x, y, k;
-    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
-      var X = x * 2, Y = y * 2, v = O.fbm(X * .004, Y * .004, 1.7, 5) + .22 * O.fbm(X * .02, Y * .02, 9, 3);
-      k = y * W + x;
-      v += .34 * Math.exp(-Math.pow(seg(X, Y, 160, 480, 340, 320) / 30, 2));
-      var r = Math.hypot(X - 560, Y - 230);
-      v += .5 * Math.exp(-Math.pow(r / 70, 2)) - .24 * Math.exp(-Math.pow(r / 15, 2));
-      r = Math.hypot(X - 400, Y - 330);
-      if (r < 78) v -= .7 * (1 - Math.pow(r / 78, 2));
-      v += .28 * Math.exp(-Math.pow((r - 78) / 9, 2));
-      var d = Math.hypot(X - 690, Y - 450);
-      v += .14 * Math.max(0, Math.sin((X * .5 + Y * .85) * .085 + O.fbm(X * .01, Y * .01, 4, 2) * 7)) * Math.exp(-Math.pow(d / 140, 2));
-      h[k] = v;
-      a[k] = O.fbm(X * .006 + 20, Y * .006, 3, 3);
-    }
-    var mn = 1e9, mx = -1e9;
-    for (k = 0; k < N; k++) {
-      if (h[k] < mn) mn = h[k];
-      if (h[k] > mx) mx = h[k]
-    }
-    var cs = ['cBase', 'c_mola', 'c_thermal', 'c_crism', 'c_radiation'].map(function (id) {
-      var c = $('#' + id);
-      c.width = W;
-      c.height = H;
-      var cx = c.getContext('2d');
-      return {
-        cx: cx,
-        d: cx.createImageData(W, H)
-      }
-    });
-    function put(L, p, c, al) {
-      var d = L.d.data;
-      d[p] = c[0];
-      d[p + 1] = c[1];
-      d[p + 2] = c[2];
-      d[p + 3] = al
-    }
-    var IN = [[18, 28, 40], [70, 119, 124], [171, 136, 104], [226, 195, 142]];
-    for (y = 0; y < H; y++) {
-      for (x = 0; x < W; x++) {
-        k = y * W + x;
-        var pixel = k * 4;
-        var X = x * 2;
-        var Y = y * 2;
-        var elevation = (h[k] - mn) / (mx - mn);
-        var right = h[x < W - 1 ? k + 1 : k];
-        var left = h[x ? k - 1 : k];
-        var down = h[y < H - 1 ? k + W : k];
-        var up = h[y ? k - W : k];
-        var light = Math.max(.35, Math.min(1.7, 1 + (right - left + down - up) * 10));
-        var darkness = O.sstep(.46, .6, a[k]);
-        var terrainColor = O.mix(
-          O.mix([170, 126, 91], [63, 54, 49], darkness),
-          [205, 169, 128],
-          O.sstep(.6, .9, elevation) * .42 * (1 - darkness)
-        );
-        var shading = light * (.72 + .28 * elevation) * (.93 + .12 * a[k]);
-        put(cs[0], pixel, [
-          terrainColor[0] * shading,
-          terrainColor[1] * shading,
-          terrainColor[2] * shading
-        ], 255);
-
-        var contour = Math.floor(elevation * 16);
-        var edge =
-          contour !== Math.floor((right - mn) / (mx - mn) * 16) ||
-          contour !== Math.floor((down - mn) / (mx - mn) * 16);
-        var slope = Math.atan(
-          Math.hypot((right - left) * .5, (down - up) * .5) * 10
-        ) * 180 / Math.PI;
-        var safetyClass = Telemetry.slopeClass(
-          slope,
-          D.layers.mola.thresholdsDeg
-        );
-        var safety = safetyClass === 'safe'
-          ? [75, 145, 103]
-          : safetyClass === 'caution'
-            ? [196, 154, 91]
-            : [183, 101, 109];
-        var safetyAlpha = slope < 2 ? 92 : slope <= 10 ? 108 : 124;
-        if (edge) safetyAlpha += 12;
-        put(cs[1], pixel, safety, safetyAlpha);
-        put(cs[2], pixel, ramp(.5 * darkness + .5 * (1 - elevation), IN), 145);
-
-        var alterationSignal = O.fbm(X * .01 + 50, Y * .01, 5, 3);
-        var geologyColor = null;
-        if (Math.exp(-Math.pow(seg(X, Y, 160, 480, 340, 320) / 45, 2)) > .5) {
-          geologyColor = [196, 154, 91];
-        } else if (Math.hypot(X - 560, Y - 230) < 80) {
-          geologyColor = [104, 169, 189];
-        } else if (Math.hypot(X - 690, Y - 450) < 130 && alterationSignal > .38) {
-          geologyColor = [173, 131, 169];
-        }
-        put(cs[3], pixel, geologyColor || [0, 0, 0], geologyColor ? 145 : 0);
-
-        var craterRimDistance = Math.hypot(X - 400, Y - 330);
-        var craterRimRisk = Math.exp(-Math.pow((craterRimDistance - 78) / 18, 2));
-        var exposedTerrainRisk = O.sstep(.35, .8, elevation) *
-          (.55 + .45 * O.sstep(.35, .65, a[k]));
-        var radiationRisk = Math.max(craterRimRisk, exposedTerrainRisk);
-        var radiationColor = O.mix(
-          [16, 185, 129],
-          [239, 68, 68],
-          radiationRisk
-        );
-        put(cs[4], pixel, radiationColor, 65 + radiationRisk * 145);
-      }
-    }
-    cs.forEach(function (L) {
-      L.cx.putImageData(L.d, 0, 0)
-    });
-  }
-  setTimeout(function () {
-    build();
-    installCanvasGisLayers()
-  }, 1800);
-  /* === 12. Overview transition and reset === */
+  /* === 11. Overview transition and reset === */
   var mapTransitionTimer = 0;
   function begin() {
     var b = document.body;
     if (b.classList.contains('eva')) return;
     b.classList.add('eva', 'dayops');
     setupGisMap();
-    build();
-    installCanvasGisLayers();
-    pick('base');
+    pick('base', null, false);
     clearTimeout(mapTransitionTimer);
     mapTransitionTimer = setTimeout(function () {
       if (!b.classList.contains('eva')) return;

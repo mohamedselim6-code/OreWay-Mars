@@ -18,8 +18,8 @@
       </div>
       <div class="cell">
         <span class="led"></span>
-        Surface model:
-        <b class="ok">Illustrative</b>
+        Orbital data:
+        <b class="ok">NASA Mars Trek</b>
       </div>
       <div class="cell">
         Suit O2:
@@ -97,20 +97,12 @@
               role="application"
               aria-label="Interactive Syrtis Major planetary GIS map"
             ></div>
-            <div id="mapFallback">
-              <div class="ground">
-                <canvas id="cBase"></canvas>
-                <canvas class="lyr on" id="c_mola"></canvas>
-                <canvas class="lyr" id="c_thermal"></canvas>
-                <canvas class="lyr" id="c_crism"></canvas>
-                <canvas class="lyr" id="c_radiation"></canvas>
-              </div>
+            <div id="mapFallback" aria-hidden="true">
               <svg
                 class="ov"
                 id="ov"
                 viewBox="0 0 800 700"
-                role="group"
-                aria-label="Illustrative fallback terrain map with route and stations"
+                role="presentation"
               >
                 <defs>
                   <pattern
@@ -141,7 +133,7 @@
                   class="hz sta"
                   tabindex="0"
                   role="button"
-                  aria-label="Steep crater hazard"
+                  aria-label="Crater-margin planning exclusion"
                 >
                   <circle
                     cx="400"
@@ -162,7 +154,7 @@
                     stroke="#b7656d"
                   ></rect>
                   <text class="hzt" x="400" y="450" text-anchor="middle">
-                    SLOPE HAZARD · &gt;10°
+                    PLANNING EXCLUSION
                   </text>
                 </g>
                 <ellipse
@@ -233,7 +225,7 @@
             </div>
 
             <div class="chip provenance" id="dataStatus">
-              NASA Mars Trek imagery loading · illustrative relief available
+              NASA Mars Trek MOLA tiles loading
             </div>
             <div class="map-hud" aria-live="polite">
               <span id="cursorLatLon">Cursor: --</span>
@@ -280,6 +272,12 @@
         </div>
         <div class="deck-critical">
           <p class="readout" id="deckO2">Suit O2: 100%</p>
+          <p
+            class="readout risk-readout"
+            title="Planning index, not a measured risk value. MOLA uses nearby numeric samples when available, otherwise configured exclusion-zone proximity; THEMIS and DONKI add context weights, not measured temperature or Mars surface dose."
+          >
+            Risk Score (0-100): <b id="riskScore" class="risk-value risk-low">0</b>
+          </p>
           <p class="readout">Signal Delay: 14m 20s</p>
           <p class="readout">Next Waypoint: 150m</p>
           <p class="sos-note" id="sosNote" role="status"></p>
@@ -297,16 +295,17 @@
         <h3>1. Terrain &amp; Data Layers</h3>
         <button class="sw" role="switch" aria-checked="true" data-l="mola">
           <span class="t">
-            <b>MOLA Topography &amp; Slope Safety</b>
-            <small>Safe plateau &lt;2° · caution 2–10° · hazard &gt;10°</small>
+            <b>MOLA Color-Shaded Relief</b>
+            <small>NASA Mars Trek global mosaic · 463 m · no slope classification</small>
+            <small class="layer-status" id="rasterSampleStatus">No local numeric samples</small>
           </span>
           <span class="st">ON</span>
           <span class="knob"></span>
         </button>
         <button class="sw" role="switch" aria-checked="false" data-l="thermal">
           <span class="t">
-            <b>THEMIS Thermal &amp; Environment</b>
-            <small>Relative thermal inertia and surface temperature</small>
+            <b>THEMIS Day/Night IR Mosaics</b>
+            <small>NASA Mars Trek controlled mosaics · 100 m</small>
           </span>
           <span class="st">OFF</span>
           <span class="knob"></span>
@@ -314,15 +313,17 @@
         <button class="sw" role="switch" aria-checked="false" data-l="crism">
           <span class="t">
             <b>CRISM Mineral &amp; Geology</b>
-            <small>Illustrative spectral units and alteration zones</small>
+            <small>Query NASA Mars Trek regional catalog</small>
+            <small class="layer-status" id="crismStatus">Not queried</small>
           </span>
           <span class="st">OFF</span>
           <span class="knob"></span>
         </button>
         <button class="sw" role="switch" aria-checked="false" data-l="radiation">
           <span class="t">
-            <b>Radiation Risk</b>
-            <small>Illustrative exposure proxy near crater rims and open terrain</small>
+            <b>Radiation Risk · DONKI SEP Events</b>
+            <small>Global event context; no Mars surface-dose measurement</small>
+            <small class="layer-status" id="radiationStatus">Not queried</small>
           </span>
           <span class="st">OFF</span>
           <span class="knob"></span>
@@ -335,7 +336,7 @@
         <button class="sw" id="audioSw" role="switch" aria-checked="true">
           <span class="t">
             <b>Audio hazard alerts</b>
-            <small>Sound cue near modeled slope hazards</small>
+            <small>Sound cue near the configured planning exclusion</small>
           </span>
           <span class="st">ON</span>
           <span class="knob"></span>
@@ -404,28 +405,28 @@
           <span class="system-online" aria-hidden="true"></span>
           System Online
         </p>
-        <h2 id="briefingTitle">Syrtis Major: Astronaut Survival &amp; Science Guide</h2>
-        <p class="briefing-objective">Mission Objective: Explore Early Noachian bedrock and collect hydrated minerals.</p>
+        <h2 id="briefingTitle">Syrtis Major Surface Assessment</h2>
+        <p class="briefing-objective">Mission objective: Review orbital products and evaluate a configured traverse.</p>
         <ol class="briefing-rules">
           <li>
             <h3>Rule 1 (Terrain - MOLA)</h3>
-            <p>Walk only on flat basalt paths in the southeast. Strictly avoid the steep northwest caldera walls (1,800m drop).</p>
+            <p>Use MOLA color-shaded relief for regional context. This mosaic does not classify slope; verify numeric terrain products before approving a traverse.</p>
           </li>
           <li>
-            <h3>Rule 2 (Heat &amp; Dust - THEMIS)</h3>
-            <p>Dark volcanic rocks absorb extreme heat. Keep suit cooling and dust filters active, and never walk across moving sand dunes.</p>
+            <h3>Rule 2 (Thermal context - THEMIS)</h3>
+            <p>THEMIS day and night IR layers are controlled orbital mosaics, not current surface-temperature measurements. Confirm product dates and conditions before use.</p>
           </li>
           <li>
-            <h3>Rule 3 (Mining Targets - CRISM)</h3>
-            <p>Collect Iron &amp; Titanium at the outer ridge, and Copper &amp; Hydrated Silica at Nili Patera vents for base construction.</p>
+            <h3>Rule 3 (Science targets - CRISM)</h3>
+            <p>Review the regional CRISM detections and linked product records. Catalog classes shown here do not establish a mineral species at a waypoint.</p>
           </li>
           <li>
             <h3>Rule 4 (Oxygen &amp; Signal Rule)</h3>
-            <p>Begin return to Base Camp before oxygen drops below 50%. Orbiter relay activates automatically if terrain blocks radio signal (Signal Delay: 14m 20s).</p>
+            <p>Begin return to Base Camp before the route reserve reaches 50%. Relay and oxygen readouts are mission-planning estimates, not live spacecraft telemetry.</p>
           </li>
           <li>
             <h3>Rule 5 (Radiation - Solar Particle Events)</h3>
-            <p>During Solar Particle Events (SPE), avoid high-radiation zones near crater rims and exposed terrain. Use sheltered areas and follow mission radiation guidance.</p>
+            <p>During Solar Particle Events (SPE), follow mission radiation protocol, avoid areas designated high-risk by qualified dose products, and use approved shelter. DONKI provides global event context, not a local Mars surface-dose map.</p>
           </li>
         </ol>
         <button class="briefing-init" id="briefingDismiss" type="button">Initialize Surface Telemetry</button>

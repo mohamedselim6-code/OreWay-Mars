@@ -1,60 +1,68 @@
 # OreWay
 
 OreWay is a static planetary-surface planning interface for Syrtis Major Planum
-(MC-13). The route, terrain relief, mineral proxies, and hazard graphics shown
-in the browser are illustrative planning models, not operational data or mission
-recommendations.
+(MC-13). The overview globe is a visual orientation element. The interactive GIS
+map uses NASA Mars Trek orbital layers and keeps configured route geometry
+separate from instrument observations.
 
 ## Architecture
 
-- `index.html` — accessible page structure and script/style links.
+- `index.html` — accessible page structure and external script/style links.
 - `style.css` — responsive map, telemetry, drawer, and Day/Night Ops styling.
-- `data.js` — Syrtis Major target, modeled stations, route, layer metadata, and optional processed-data validation.
-- `telemetry.js` — route and reserve calculations, slope classification, Web Audio cues, and PNG snapshot generation.
-- `app.js` — globe and map rendering, controls, route and walk simulation, geofence alerts, and optional JSON loading.
-- `nasa_data_processor.py` — summarizes operator-supplied MOLA elevation and optional CRISM index rasters.
-- `nasa_surface_data.json` — schema-valid placeholder replaced by processed raster samples when available.
+- `data.js` — Syrtis Major coordinates, NASA layer endpoints, and product metadata.
+- `telemetry.js` — route and reserve calculations, audio cues, and snapshot generation.
+- `app.js` — Leaflet map, NASA catalog/API requests, route controls, and telemetry UI.
+- `nasa_data_processor.py` — summaries of operator-supplied MOLA and CRISM rasters.
+- `nasa_surface_data.json` — optional output from the raster processor.
 
-The browser scripts use classic deferred scripts in dependency order: data,
-telemetry, then the application controller. For full globe rendering, Three.js
-is loaded from a CDN; when unavailable, the page displays a static Mars globe.
-NASA Mars Trek tiles load independently of the procedural fallback; delayed or
-failed imagery leaves the fallback visible with an updated map status.
+The browser scripts load in dependency order: `data.js`, `telemetry.js`, then
+`app.js`. Three.js and Leaflet are loaded from CDNs. An internet connection is
+required for NASA map tiles and live catalog requests.
 
-The walk simulator moves the EVA marker along the modeled traverse and scales
-the suit-oxygen readout from 100% to 50%. A 600 m Dark Dunes geofence raises a
-map warning and audio cue. Night Ops applies a darker thermal filter and
-enables the illustrative THEMIS layer.
+## NASA data
 
-The optional Radiation Risk layer is a procedural visualization of relative
-exposure near crater rims and open terrain; it is not measured radiation data.
-During Solar Particle Events, follow mission guidance and seek sheltered areas.
+- **MOLA base map:** NASA Mars Trek
+  `Mars_MGS_MOLA_ClrShade_merge_global_463m` color-shaded relief tiles
+  (`.jpg`, native zoom through 6).
+- **THEMIS overlay:** NASA Mars Trek 100 m controlled Day IR and Night IR
+  mosaics (`.png`, native zoom through 9). Night Ops selects the Night IR mosaic.
+- **CRISM detections:** NASA Mars Trek hydrous-mineral detections service. The
+  app queries CRISM records in a regional Syrtis Major window and plots the
+  catalog coordinates. The service's `Type` field is a generic detection class;
+  it does not identify a mineral species. Product details are available from
+  the linked NASA catalog.
+- **Radiation context:** NASA DONKI Solar Energetic Particle (SEP) events from
+  the preceding 30 days. The browser uses NASA's public `DEMO_KEY`, which has
+  request limits. DONKI events are global space-weather context, not radiation
+  measurements at Mars or a surface-dose map.
 
-## NASA data sources
+The HUD risk score is a 0-100 planning index, not a measured exposure value.
+It updates with route position and active layers. When a local numeric MOLA
+slope sample is available within 250 m, slope contributes up to 60 points;
+otherwise MOLA contributes a proximity term (up to 60 points within 1.5 km)
+from the bounding envelope of the configured crater-margin exclusion. That
+geometry is not a NASA slope or hazard product. Selecting THEMIS adds a
+10-point Day Ops or
+20-point Night Ops context weight; these are not derived from tile colors or
+temperature measurements. DONKI adds 25 points when SEP events are reported,
+10 while event status is loading or unavailable, and zero when the query
+reports none. DONKI remains global event context, not local Mars surface dose.
+The score is capped at 100 and color-coded green below 30, yellow from 30
+through 70, and red above 70. Numeric MOLA samples, THEMIS temperatures, and
+local radiation dose are not inferred from rendered imagery or global events.
 
-Use the archives to locate and download products, then verify product documentation, coordinate reference systems, units, and processing history before use:
+## Optional raster summaries
 
-- [NASA Mars Trek](https://trek.nasa.gov/mars/)
-- [MGS MOLA archive](https://pds-geosciences.wustl.edu/missions/mgs/mola.html)
-- [Mars Odyssey THEMIS archive](https://pds-geosciences.wustl.edu/missions/odyssey/themis.html)
-- [MRO CRISM archive](https://pds-geosciences.wustl.edu/missions/mro/crism.htm)
-
-The included processor does not download data, georeference imagery, classify
-minerals, or verify provenance. It requires a site-clipped MOLA raster in a
-projected CRS with known linear units, and uses explicit pixel locations rather
-than assuming that Mars coordinates can be treated as Earth coordinates. Its
-optional CRISM input is a single-band index raster; index values are reported
-without assigning a mineral interpretation.
-
-## Process raster summaries
-
-Install the Python dependencies in the environment used for processing:
+The processor accepts already prepared rasters; it does not download data,
+georeference images, classify minerals, or validate product provenance. Confirm
+the product documentation, coordinate system, and units before processing.
+Install dependencies with:
 
 ```text
 python -m pip install numpy rasterio
 ```
 
-Provide pixel columns and rows for the four site markers in the input MOLA raster:
+Provide pixel locations for the four waypoints:
 
 ```powershell
 python nasa_data_processor.py `
@@ -66,38 +74,13 @@ python nasa_data_processor.py `
   --output nasa_surface_data.json
 ```
 
-If supplying a CRISM single-band index raster, provide pixel locations for the sites to sample:
+An optional single-band CRISM index raster can be supplied with `--crism` and
+`--crism-pixel ID=COLUMN,ROW`. Index values are reported without assigning a
+mineral interpretation. MOLA samples need a valid one-pixel neighborhood for
+slope calculation; elevations default to metres.
 
-```powershell
-python nasa_data_processor.py `
-  --mola mola_site.tif `
-  --mola-pixel base=120,90 `
-  --mola-pixel s1=240,140 `
-  --mola-pixel s2=390,210 `
-  --mola-pixel s3=510,300 `
-  --crism crism_index.tif `
-  --crism-pixel s1=90,80 `
-  --crism-pixel s2=170,135 `
-  --output nasa_surface_data.json
-```
+## Deployment
 
-`--mola-pixel` uses `ID=COLUMN,ROW` and is required once for each of `base`,
-`s1`, `s2`, and `s3`. CRISM pixel locations are independent because the rasters
-may use different grids. MOLA sample pixels need a valid one-pixel neighborhood
-to calculate slope. Elevations default to metres; use `--elevation-unit km` if
-the raster stores kilometres. The output contains schema version 1, MOLA
-elevation/slope summaries and station samples, and optional raw CRISM index
-samples.
-
-The checked-in `nasa_surface_data.json` is a placeholder with no raster samples.
-Running the processor with its default output replaces it with the processed
-dataset. Over HTTP, the app validates that dataset and displays available site
-samples while continuing to label the rendered map as illustrative. When opened
-with `file://`, the app skips the optional fetch because browsers restrict local
-file requests; use a local HTTP server or static host to load processed samples.
-
-## Static deployment
-
-Deploy the files in this directory to any static host, including Vercel. No
-build step is required. The placeholder JSON can remain in the deployment;
-replace it with processor output when raster samples are available.
+Deploy this directory to a static host such as Vercel. No build step is required.
+Use a local HTTP server during development so the optional JSON dataset can be
+loaded; the browser skips that local-file request under `file://`.

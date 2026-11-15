@@ -558,32 +558,6 @@ body.eva #app {
   box-shadow: 0 0 40px rgba(224,100,58,.15)
 }
 
-.ground {
-  position: absolute;
-  inset: 0;
-  transition: filter .8s
-}
-
-.ground canvas,.ov {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%
-}
-
-.lyr {
-  opacity: 0;
-  transition: opacity .5s
-}
-
-.lyr.on {
-  opacity: .82
-}
-
-.world.night .ground {
-  filter: brightness(.42) saturate(.75) hue-rotate(-12deg)
-}
-
 .chip {
   position: absolute;
   left: 8px;
@@ -863,8 +837,29 @@ body.eva #app {
 }
 
 .sw .t small {
+  display: block;
   color: var(--dim);
   font-size: .9rem
+}
+
+.sw .t .layer-status {
+  margin-top: .2rem;
+  color: var(--sky);
+  font-size: .76rem;
+  line-height: 1.35
+}
+
+.sep-state {
+  padding: .2rem .35rem;
+  border-left: 2px solid #94A3B8
+}
+
+.sep-state.sep-none {
+  border-color: #10B981
+}
+
+.sep-state.sep-reported {
+  border-color: #EF4444
 }
 
 .sw .st {
@@ -1153,10 +1148,6 @@ body.eva #app {
   }
 }
 
-#cBase {
-  transition: filter .5s
-}
-
 #vec,#link {
   pointer-events: none
 }
@@ -1436,14 +1427,6 @@ h1 {
 .world {
   border-color: var(--line);
   box-shadow: 0 2px 14px rgba(0,0,0,.2)
-}
-
-.world.night .ground {
-  filter: brightness(.55) saturate(.72)
-}
-
-.lyr.on {
-  opacity: .52
 }
 
 .chip {
@@ -1983,15 +1966,11 @@ body.dayops .legend {
 
 #mapFallback {
   z-index: 0;
-  transition: opacity .25s ease
-}
-
-.world.tiles-ready #mapFallback {
-  opacity: 0;
+  visibility: hidden;
   pointer-events: none
 }
 
-#mapFallback .ground,#mapFallback .ov {
+#mapFallback .ov {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -2008,10 +1987,6 @@ body.dayops .legend {
 .world.night .leaflet-tile-pane,
 .world.night .leaflet-image-layer {
   filter: brightness(.42) saturate(.9) hue-rotate(-12deg)
-}
-
-.world.night .gis-radiation-overlay {
-  filter: none
 }
 
 .world .leaflet-control {
@@ -2572,6 +2547,19 @@ body.dayops .deck-critical .readout {
   font-size: 1rem
 }
 
+.risk-value {
+  color: #10B981;
+  font-variant-numeric: tabular-nums;
+}
+
+.risk-value.risk-moderate {
+  color: #F59E0B;
+}
+
+.risk-value.risk-high {
+  color: #EF4444;
+}
+
 .sos-note:empty {
   display: none
 }
@@ -2702,6 +2690,18 @@ body.dayops .glabel {
   border-color: var(--console-line)
 }
 
+@media (max-width: 1450px) {
+  .deck-critical {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: .55rem .9rem
+  }
+
+  .deck-critical .sos {
+    margin-left: auto
+  }
+}
+
 @media (max-width: 900px) {
   body.eva #app,
   body.dayops #app {
@@ -2735,6 +2735,10 @@ body.dayops .glabel {
   .deck-critical {
     justify-content: flex-start;
     flex-wrap: wrap
+  }
+
+  .risk-readout {
+    white-space: normal
   }
 
   .sos {

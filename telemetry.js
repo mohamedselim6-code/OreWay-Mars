@@ -21,15 +21,6 @@
     }
     return totalKm;
   }
-  function slopeClass(degrees, thresholds) {
-    if (degrees < thresholds.safeMaxExclusive) {
-      return 'safe';
-    }
-    if (degrees <= thresholds.cautionMaxInclusive) {
-      return 'caution';
-    }
-    return 'hazard';
-  }
   function traverseMetrics(distanceKm, totalKm, reservePercent, totalReturnMinutes) {
     if (totalKm <= 0 || totalReturnMinutes < 0) {
       throw new RangeError('Route length must be positive and return time non-negative.');
@@ -155,20 +146,18 @@
       stopAmbient: stopAmbient
     };
   }
-  /* Compose the current illustrative traverse into a downloadable PNG. */
+  /* Compose mission parameters and configured route geometry into a PNG. */
   function createSnapshot(options) {
     if (
       !options ||
-      !options.mapCanvas ||
       typeof options.routePath !== 'string' ||
       !options.position ||
-      !Array.isArray(options.layerCanvases) ||
       !Array.isArray(options.stations) ||
       !options.metrics ||
       !Array.isArray(options.activeLayers)
     ) {
       throw new TypeError(
-        'Snapshot requires map, route, position, layers, stations, and telemetry data.'
+        'Snapshot requires route, position, stations, layers, and telemetry data.'
       );
     }
     var canvas = document.createElement('canvas');
@@ -188,20 +177,26 @@
     context.fillText('SYRTIS MAJOR · FIELD SNAPSHOT', 40, 70);
     context.fillStyle = muted;
     context.font = '500 22px "Segoe UI", Arial, sans-serif';
-    context.fillText('Mars  |  MC-13  |  8.4°N, 69.5°E  |  OreWay surface assessment', 40, 108);
+    context.fillText('Mars  |  MC-13  |  8.4°N, 69.5°E  |  Mission planning snapshot', 40, 108);
     var mapX = 40;
     var mapY = 150;
-    context.drawImage(options.mapCanvas, mapX, mapY, 700, 612);
-    options.layerCanvases.forEach(function (layer) {
-      if (layer.enabled) {
-        context.globalAlpha = 0.82;
-        context.drawImage(layer.canvas, mapX, mapY, 700, 612);
-        context.globalAlpha = 1;
-      }
-    });
-    if (night) {
-      context.fillStyle = 'rgba(5,10,40,.5)';
-      context.fillRect(mapX, mapY, 700, 612);
+    context.fillStyle = night ? '#131B2E' : '#FFFFFF';
+    context.fillRect(mapX, mapY, 700, 612);
+    context.strokeStyle = night ? '#2B3548' : '#CBD5E1';
+    context.lineWidth = 1;
+    for (var gridX = 0; gridX <= 800; gridX += 100) {
+      var px = mapX + gridX * .875;
+      context.beginPath();
+      context.moveTo(px, mapY);
+      context.lineTo(px, mapY + 612);
+      context.stroke();
+    }
+    for (var gridY = 0; gridY <= 700; gridY += 100) {
+      var py = mapY + gridY * .875;
+      context.beginPath();
+      context.moveTo(mapX, py);
+      context.lineTo(mapX + 700, py);
+      context.stroke();
     }
     context.save();
     context.beginPath();
@@ -209,15 +204,7 @@
     context.clip();
     context.translate(mapX, mapY);
     context.scale(0.875, 0.875);
-    context.fillStyle = 'rgba(183,101,109,.22)';
-    context.strokeStyle = '#b7656d';
-    context.lineWidth = 4;
-    context.setLineDash([10, 7]);
-    context.beginPath();
-    context.arc(400, 330, 86, 0, Math.PI * 2);
-    context.fill();
-    context.stroke();
-    context.strokeStyle = '#5aa77a';
+    context.strokeStyle = '#10B981';
     context.lineWidth = 7;
     context.setLineDash([]);
     context.stroke(new Path2D(options.routePath));
@@ -246,6 +233,13 @@
     context.lineWidth = 2;
     context.strokeRect(mapX, mapY, 700, 612);
     context.textAlign = 'left';
+    context.fillStyle = muted;
+    context.font = '500 18px "Segoe UI", Arial, sans-serif';
+    context.fillText(
+      'Configured traverse geometry · no terrain classification shown',
+      mapX,
+      mapY + 596
+    );
     var rows = [
       ['Mission mode', night ? 'Night Ops' : 'Day Ops'],
       ['Distance walked', options.metrics.distanceKm.toFixed(1) + ' km of 8.3 km'],
@@ -256,7 +250,7 @@
         'Active layers',
         options.activeLayers.length
           ? options.activeLayers.join(' + ').toUpperCase()
-          : 'TERRAIN'
+          : 'NONE'
       ]
     ];
     rows.forEach(function (row, index) {
@@ -271,7 +265,7 @@
     context.fillStyle = muted;
     context.font = '500 18px "Segoe UI", Arial, sans-serif';
     context.fillText(
-      'Illustrative planning model · not operational mission data  |  ' +
+      'NASA Mars Trek layers are available in the interactive map  |  ' +
       new Date().toISOString().replace('T', ' ').slice(0, 16) +
       ' UTC',
       40,
@@ -281,7 +275,6 @@
   }
   global.OreWayTelemetry = {
     distanceAtRouteLength: distanceAtRouteLength,
-    slopeClass: slopeClass,
     traverseMetrics: traverseMetrics,
     distanceToSegment: distanceToSegment,
     isInsideHazard: isInsideHazard,
