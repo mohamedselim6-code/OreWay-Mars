@@ -4030,6 +4030,98 @@ body.dayops .deck #walkBtn {
   }
 }
 
+@media (max-width: 767.98px) {
+  #app[data-active-tab="mission"] {
+    grid-template-rows: auto auto max-content max-content minmax(0, 1fr) calc(56px + env(safe-area-inset-bottom, 0px))
+  }
+
+  #app[data-active-tab="mission"] .hud #overviewBtn,
+  #app[data-active-tab="mission"] .hud #modeBtn,
+  #app[data-active-tab="map"] .hud #overviewBtn,
+  #app[data-active-tab="map"] .hud #modeBtn,
+  #app[data-active-tab="sites"] .hud #overviewBtn,
+  #app[data-active-tab="sites"] .hud #modeBtn,
+  #app[data-active-tab="route"] .hud #overviewBtn,
+  #app[data-active-tab="route"] .hud #modeBtn,
+  #app[data-active-tab="report"] .hud #overviewBtn,
+  #app[data-active-tab="report"] .hud #modeBtn {
+    display: none
+  }
+
+  #app[data-active-tab="mission"] .hud {
+    grid-template-rows: auto auto
+  }
+
+  #app[data-active-tab="mission"] #deck-critical {
+    grid-row: 3;
+    height: max-content;
+    overflow: visible
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .readout,
+  #app[data-active-tab="mission"] .deck-critical .sos-note,
+  #app[data-active-tab="mission"] .deck-critical #sosBtn {
+    grid-row: auto;
+    grid-column: auto
+  }
+
+  #app[data-active-tab="mission"] .deck-critical #deckO2,
+  #app[data-active-tab="mission"] .deck-critical .risk-readout {
+    grid-row: 1
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .readout[title^="Autonomous"] {
+    grid-row: 2;
+    grid-column: 1 / -1
+  }
+
+  #app[data-active-tab="mission"] .deck-critical #nextWaypoint,
+  #app[data-active-tab="mission"] .deck-critical #sosBtn {
+    grid-row: 3
+  }
+
+  #app[data-active-tab="mission"] .deck-critical #sosNote {
+    grid-row: 4;
+    grid-column: 1 / -1
+  }
+
+  #app[data-active-tab="mission"] #alertsDisclosure {
+    grid-row: 4;
+    align-self: start;
+    max-height: min(30dvh, 220px)
+  }
+
+  #app[data-active-tab="mission"] .bottom-nav {
+    grid-row: 6
+  }
+
+  #app[data-active-tab="sites"] #mission-sidebar .mission-sidebar-header,
+  #app[data-active-tab="sites"] #mission-sidebar .mission-route-controls > h3 {
+    display: none
+  }
+
+  #app[data-active-tab="report"] .gauge {
+    background: conic-gradient(from -90deg,var(--gauge-color) var(--gauge-progress),#334155 0)
+  }
+
+  #app[data-active-tab="report"] .gauge::before {
+    background: #131B2E
+  }
+
+  #app[data-active-tab="report"] .gauge .gval {
+    color: #F8FAFC
+  }
+
+  #app[data-active-tab="report"] .gauge .glabel {
+    color: #CBD5E1
+  }
+
+  #app[data-active-tab="route"] #profileChartContainer {
+    height: 100%;
+    min-height: 0
+  }
+}
+
 .map-tools {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
