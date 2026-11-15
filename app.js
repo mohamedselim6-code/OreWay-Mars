@@ -458,6 +458,11 @@
     s2: 'Site 2: Nili Patera',
     s3: 'Site 3: Dark Dunes'
   };
+  var GIS_STATION_POPUPS = {
+    s1: 'Ti-Fe Ridge: Iron & Titanium. Safe extraction zone.',
+    s2: 'Nili Patera: Hydrated Silica (Opal) detected by CRISM. Ancient hydrothermal vent. Age: ~2.46 Ga.',
+    s3: 'Dark Dunes: Hazardous, moving sand dunes. Avoid.'
+  };
   var GIS_ROUTE = ST.map(function (station) {
     return GIS_STATIONS[station.id]
   });
@@ -469,10 +474,17 @@
   var gisRouteLayer = null;
   var gisHazardLayer = null;
   var gisAstronaut = null;
+  var gisRadarCircle = null;
+  var gisRadarRenderer = null;
+  var gisDuneWarningPopup = null;
   var gisGuideLayer = null;
   var gisCanvasLayers = {};
   var gisTilesReady = false;
   var gisTileTimeout = 0;
+  var GIS_DUNE_WARNING =
+    'WARNING: Approaching Hazard Zone (Dark Dunes). Reroute Recommended.';
+  var GIS_DUNE_WARNING_DISTANCE_M = 600;
+  var GIS_RADAR_RADIUS_M = 250;
   var GIS_HAZARD = [
     [8.416, 69.495],
     [8.416, 69.501],
@@ -600,6 +612,14 @@
           iconAnchor: [13, 13]
         })
       }).addTo(gisMap);
+      if (GIS_STATION_POPUPS[station.id]) {
+        var popupContent = document.createElement('div');
+        popupContent.className = 'gis-popup-copy';
+        popupContent.textContent = GIS_STATION_POPUPS[station.id];
+        marker.bindPopup(popupContent, {
+          className: 'gis-science-popup'
+        });
+      }
       marker.bindTooltip(GIS_STATION_NAMES[station.id], {
         direction: 'top',
         offset: [0, -10]
@@ -641,6 +661,7 @@
           bestLength = start.routeLength + fraction * (end.routeLength - start.routeLength);
         }
       }
+      resetWalkSimulation();
       stopAuto();
       cancelAnimationFrame(anim);
       cur = bestLength;
@@ -684,6 +705,26 @@
     if (!gisMap || !gisAstronaut) return null;
     var position = gisPositionAtRouteLength(cur);
     gisAstronaut.setLatLng(position);
+    if (walkSimulationActive) {
+      if (!gisRadarCircle) {
+        if (!gisRadarRenderer) gisRadarRenderer = window.L.svg();
+        gisRadarCircle = window.L.circle(position, {
+          className: 'gis-radar-circle',
+          renderer: gisRadarRenderer,
+          radius: GIS_RADAR_RADIUS_M,
+          color: '#10B981',
+          weight: 2,
+          opacity: .85,
+          fillColor: '#10B981',
+          fillOpacity: .14,
+          interactive: false
+        }).addTo(gisMap);
+      } else {
+        gisRadarCircle.setLatLng(position);
+      }
+    } else if (gisRadarCircle && gisMap.hasLayer(gisRadarCircle)) {
+      gisMap.removeLayer(gisRadarCircle);
+    }
     if (guide) {
       if (!gisGuideLayer) gisGuideLayer = window.L.polyline([], {
         color: '#38BDF8',
@@ -738,9 +779,14 @@
   function place() {
     var p = route.getPointAtLength(cur);
     astro.setAttribute('transform', 'translate(' + p.x + ',' + p.y + ')');
+    $('#radar').setAttribute(
+      'visibility',
+      walkSimulationActive ? 'visible': 'hidden'
+    );
     if (simReady) update(p)
   }
   function moveTo(to, cb) {
+    resetWalkSimulation();
     stopAuto();
     cancelAnimationFrame(anim);
     var from = cur, dur = reduce ? 10: Math.max(500, Math.min(2400, Math.abs(to - from) * 3.2)), t0 = performance.now();
@@ -762,7 +808,7 @@
       ['Distance', s.km + ' km'],
       ['Walk time', fmt(s.km)],
       ['Suit O₂ on arrival', arrival + '%'],
-      ['Surface temp', night ? '-88°C' : '-23°C']
+      ['Surface temp', night ? '-73°C' : '-23°C']
     ];
     var sampleNote = '';
     if (
@@ -798,6 +844,7 @@
     });
   }
   function pick(id, cb) {
+    resetWalkSimulation();
     var s = id === 'haz' ? HAZ: ST.filter(function (x) {
       return x.id === id
     })[0];
@@ -823,7 +870,9 @@
     o2: 100,
     ret: 0,
     weak: false
-  }, simReady = false, auto = 0, audio = Telemetry.createAudioUtilities(), ambientOn = false;
+  }, simReady = false, auto = 0, walkAnimation = 0, walkSimulationActive = false,
+  duneWarningActive = false, nightThermalAuto = false,
+  audio = Telemetry.createAudioUtilities(), ambientOn = false;
   function banner(c, t) {
     $('#banner').className = 'alertbar ' + c;
     $('#bmsg').textContent = t
@@ -833,16 +882,62 @@
     auto = 0;
     $('#autoBtn').textContent = 'Run route'
   }
+  function stopWalk() {
+    cancelAnimationFrame(walkAnimation);
+    walkAnimation = 0;
+    $('#walkBtn').textContent = 'Simulate Walk';
+    $('#walkBtn').setAttribute('aria-pressed', 'false');
+  }
+  function resetWalkSimulation() {
+    stopWalk();
+    walkSimulationActive = false;
+    duneWarningActive = false;
+    if (gisRadarCircle && gisMap) {
+      gisMap.removeLayer(gisRadarCircle);
+      gisRadarCircle = null;
+    }
+    $('#radar').setAttribute('visibility', 'hidden');
+    if (gisDuneWarningPopup && gisMap) {
+      gisMap.closePopup(gisDuneWarningPopup);
+      gisDuneWarningPopup = null;
+    }
+  }
+  function showDuneWarning(position) {
+    if (gisMap && window.L) {
+      var content = document.createElement('div');
+      content.className = 'gis-dune-warning-copy';
+      content.textContent = GIS_DUNE_WARNING;
+      gisDuneWarningPopup = window.L.popup({
+        className: 'gis-dune-warning',
+        maxWidth: 340,
+        autoClose: true,
+        closeOnClick: false
+      }).setLatLng(position).setContent(content).openOn(gisMap);
+    }
+    if (audioOn) audio.playAlertTone();
+  }
   function update(p) {
     p = p || route.getPointAtLength(cur);
     var metrics = Telemetry.traverseMetrics(kmAt(cur), map.traverseKm, 15, map.returnMinutes);
-    var km = metrics.distanceKm, o2 = metrics.oxygenPercent, ret = metrics.returnMinutes, near = null, i;
+    var km = metrics.distanceKm, o2 = metrics.oxygenPercent,
+      ret = metrics.returnMinutes, near = null, i;
     for (i = 1; i < ST.length; i++) if (Math.abs(cur - ST[i].len) < 18) near = ST[i];
     var gisPosition = syncGisSimulation();
     var inHazard = gisPosition && gisHazardLayer
       ? gisHazardLayer.getBounds().contains(gisPosition)
       : Telemetry.isInsideHazard(p, hazardData);
-    var st = near
+    var duneDistance = gisPosition
+      ? marsDistance(gisPosition, window.L.latLng(GIS_STATIONS.s3))
+      : (map.traverseKm - kmAt(cur)) * 1000;
+    var approachingDunes =
+      walkSimulationActive && duneDistance <= GIS_DUNE_WARNING_DISTANCE_M;
+    if (approachingDunes && !duneWarningActive) {
+      duneWarningActive = true;
+      showDuneWarning(gisPosition);
+    }
+    var st = approachingDunes
+      ? 'dune-warning'
+      : near
       ? 'target'
       : inHazard
         ? 'danger'
@@ -861,6 +956,7 @@
     if (key !== lastKey) {
       lastKey = key;
       if (st === 'target') banner('target', 'SITE REACHED: ' + near.mine + ' assessment point.');
+      else if (st === 'dune-warning') banner('alert', GIS_DUNE_WARNING);
       else if (st === 'danger') banner('alert', 'SLOPE HAZARD: steep crater margin ahead. Follow the mapped traverse.');
       else if (st === 'weak') banner('weak', 'SIGNAL: terrain obstruction. Orbiter relay in use.');
       else banner('ok', 'ROUTE STATUS: within the modeled safe-slope corridor.');
@@ -890,10 +986,15 @@
       });
       render(near)
     }
+    if (walkSimulationActive) {
+      o2 = Math.max(50, Math.round(100 - (cur / TL) * 50));
+    }
+    T.o2 = o2;
     slider.value = Math.round(cur / TL * 1000);
     slider.setAttribute('aria-valuetext', km.toFixed(1) + ' km');
     $('#simKm').textContent = km.toFixed(1) + ' km of 8.3 km';
     $('#simO2').textContent = o2 + '%';
+    $('#deckO2').textContent = 'Suit O2: ' + o2 + '%';
     $('#o2Value').textContent = o2 + '%';
     $('#o2Gauge').style.setProperty('--gauge-progress', o2 + '%');
     $('#o2Gauge').setAttribute('aria-label', 'Oxygen ' + o2 + ' percent');
@@ -939,6 +1040,7 @@
     }
   }
   slider.addEventListener('input', function () {
+    resetWalkSimulation();
     stopAuto();
     cancelAnimationFrame(anim);
     cur = slider.value / 1000 * TL;
@@ -950,6 +1052,7 @@
     })
   });
   $('#autoBtn').addEventListener('click', function () {
+    resetWalkSimulation();
     if (auto) {
       stopAuto();
       return
@@ -969,6 +1072,42 @@
       if (cur < TL) auto = requestAnimationFrame(step);
       else stopAuto()
     })(t0);
+  });
+  $('#walkBtn').addEventListener('click', function () {
+    if (walkAnimation) {
+      stopWalk();
+      return;
+    }
+    stopAuto();
+    cancelAnimationFrame(anim);
+    if (!walkSimulationActive || cur >= TL - 1) {
+      resetWalkSimulation();
+      cur = 0;
+      walkSimulationActive = true;
+      duneWarningActive = false;
+      if (gisDuneWarningPopup && gisMap) {
+        gisMap.closePopup(gisDuneWarningPopup);
+        gisDuneWarningPopup = null;
+      }
+    }
+    this.textContent = 'Pause walk';
+    this.setAttribute('aria-pressed', 'true');
+    place();
+    var previousTime = performance.now();
+    var duration = reduce ? 3 : 16;
+    (function step(now) {
+      var dt = Math.min((now - previousTime) / 1000, .05);
+      previousTime = now;
+      cur = Math.min(TL, cur + dt * TL / duration);
+      place();
+      if (cur < TL) {
+        walkAnimation = requestAnimationFrame(step);
+      } else {
+        walkAnimation = 0;
+        $('#walkBtn').textContent = 'Simulate Walk';
+        $('#walkBtn').setAttribute('aria-pressed', 'false');
+      }
+    })(previousTime);
   });
   $('#guideBtn').addEventListener('click', function () {
     guide = !guide;
@@ -1013,6 +1152,13 @@
       else gisMap.removeLayer(gisCanvasLayers[id]);
     }
     legend();
+  }
+  function setLayerControl(id, on) {
+    var control = $('.sw[data-l="' + id + '"]');
+    control.setAttribute('aria-checked', on);
+    control.querySelector('.st').textContent = on ? 'ON': 'OFF';
+    $('#c_' + id).classList.toggle('on', on);
+    layerOn(id, on);
   }
   /* === 9. Audio alerts and mission snapshot === */
   function beep() {
@@ -1133,10 +1279,24 @@
     document.body.classList.toggle('dayops', !n);
     this.setAttribute('aria-pressed', n);
     this.textContent = n ? 'Night Ops': 'Day Ops';
+    var thermalControl = $('.sw[data-l="thermal"]');
+    if (n && thermalControl.getAttribute('aria-checked') !== 'true') {
+      setLayerControl('thermal', true);
+      nightThermalAuto = true;
+    } else if (!n && nightThermalAuto) {
+      setLayerControl('thermal', false);
+      nightThermalAuto = false;
+    }
     update();
     render(sel === 'haz' ? HAZ: ST.filter(function (x) {
       return x.id === sel
     })[0]);
+    if (n) {
+      banner(
+        'weak',
+        'Night Mode Active: Temp drops to -73°C. THEMIS thermal data engaged.'
+      );
+    }
   });
   var menu = $('#menu'), scrim = $('#scrim');
   function openMenu(o) {
@@ -1161,10 +1321,10 @@
   $$('.sw[data-l]').forEach(function (b) {
     b.addEventListener('click', function () {
       var on = b.getAttribute('aria-checked') !== 'true';
-      b.setAttribute('aria-checked', on);
-      b.querySelector('.st').textContent = on ? 'ON': 'OFF';
-      $('#c_' + b.dataset.l).classList.toggle('on', on);
-      layerOn(b.dataset.l, on);
+      if (b.dataset.l === 'thermal' && world.classList.contains('night')) {
+        nightThermalAuto = false;
+      }
+      setLayerControl(b.dataset.l, on);
     })
   });
   /* === 11. Illustrative terrain and science-layer canvases === */
@@ -1310,6 +1470,7 @@
   $('#overviewBtn').addEventListener('click', function () {
     clearTimeout(mapTransitionTimer);
     openMenu(false);
+    resetWalkSimulation();
     stopAuto();
     cancelAnimationFrame(anim);
     cur = 0;

@@ -11,7 +11,7 @@ recommendations.
 - `style.css` — responsive map, telemetry, drawer, and Day/Night Ops styling.
 - `data.js` — Syrtis Major target, modeled stations, route, layer metadata, and optional processed-data validation.
 - `telemetry.js` — route and reserve calculations, slope classification, Web Audio cues, and PNG snapshot generation.
-- `app.js` — globe and map rendering, controls, map layers, route simulation, and optional JSON loading.
+- `app.js` — globe and map rendering, controls, route and walk simulation, geofence alerts, and optional JSON loading.
 - `nasa_data_processor.py` — summarizes operator-supplied MOLA elevation and optional CRISM index rasters.
 - `nasa_surface_data.json` — schema-valid placeholder replaced by processed raster samples when available.
 
@@ -20,6 +20,11 @@ telemetry, then the application controller. For full globe rendering, Three.js
 is loaded from a CDN; when unavailable, the page displays a static Mars globe.
 NASA Mars Trek tiles load independently of the procedural fallback; delayed or
 failed imagery leaves the fallback visible with an updated map status.
+
+The walk simulator moves the EVA marker along the modeled traverse and scales
+the suit-oxygen readout from 100% to 50%. A 600 m Dark Dunes geofence raises a
+map warning and audio cue. Night Ops applies a darker thermal filter and
+enables the illustrative THEMIS layer.
 
 ## NASA data sources
 

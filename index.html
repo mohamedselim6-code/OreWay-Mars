@@ -210,6 +210,7 @@
                 <path id="routeD"></path>
                 <g id="stations"></g>
                 <g id="astro">
+                  <circle id="radar" class="radar" r="28" visibility="hidden"></circle>
                   <circle
                     r="10"
                     fill="#0f172a"
@@ -266,6 +267,14 @@
             <button class="wp" type="button" data-id="s2">Site 2</button>
             <button class="wp" type="button" data-id="s3">Site 3</button>
             <button class="wp" type="button" id="autoBtn">Run route</button>
+            <button
+              class="wp"
+              type="button"
+              id="walkBtn"
+              aria-pressed="false"
+            >
+              Simulate Walk
+            </button>
           </div>
         </div>
         <div class="deck-critical">
