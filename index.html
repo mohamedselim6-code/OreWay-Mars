@@ -68,6 +68,82 @@
     </main>
 
     <section id="app" aria-labelledby="mission-heading">
+      <div id="mission-sidebar" role="complementary" aria-label="Mission Control">
+        <div class="mission-sidebar-header">
+          <h2>Mission Control</h2>
+        </div>
+        <h3>1. Terrain &amp; Data Layers</h3>
+        <button class="sw" role="switch" aria-checked="true" data-l="mola">
+          <span class="t">
+            <b>MOLA Color-Shaded Relief</b>
+            <small>NASA Mars Trek global mosaic · 463 m · no slope classification</small>
+            <small class="layer-status" id="rasterSampleStatus">No local numeric samples</small>
+          </span>
+          <span class="st">ON</span>
+          <span class="knob"></span>
+        </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="thermal">
+          <span class="t">
+            <b>THEMIS Day/Night IR Mosaics</b>
+            <small>NASA Mars Trek controlled mosaics · 100 m</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="crism">
+          <span class="t">
+            <b>CRISM Mineral &amp; Geology</b>
+            <small>Query NASA Mars Trek regional catalog</small>
+            <small class="layer-status" id="crismStatus">Not queried</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
+        <button class="sw" role="switch" aria-checked="false" data-l="radiation">
+          <span class="t">
+            <b>Radiation Risk · DONKI SEP Events</b>
+            <small>Global event context; no Mars surface-dose measurement</small>
+            <small class="layer-status" id="radiationStatus">Not queried</small>
+          </span>
+          <span class="st">OFF</span>
+          <span class="knob"></span>
+        </button>
+        <small class="layer-status">DONKI SEP context: Mars lacks a global magnetic field. Seek shelter in lava tubes during Solar Particle Events.</small>
+        <small
+          class="layer-status"
+          title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."
+        >Dust Storm Risk: Moderate</small>
+
+        <h3>2. Route &amp; Navigation</h3>
+        <button class="big home" id="guideBtn" type="button" aria-pressed="false">
+          Show return-to-base guidance
+        </button>
+        <div class="wps">
+          <button class="wp" type="button" data-id="base">Base</button>
+          <button class="wp" type="button" data-id="s1">Site 1</button>
+          <button class="wp" type="button" data-id="s2">Site 2</button>
+          <button class="wp" type="button" data-id="s3">Site 3</button>
+          <button class="wp" type="button" id="autoBtn">Run route</button>
+          <button
+            class="wp"
+            type="button"
+            id="walkBtn"
+            aria-pressed="false"
+          >
+            Simulate Walk
+          </button>
+        </div>
+        <small class="walk-hint">Click to start mission simulation and trigger hazard alerts.</small>
+        <button class="sw" id="audioSw" role="switch" aria-checked="true">
+          <span class="t">
+            <b>Audio hazard alerts</b>
+            <small>Sound cue near the configured planning exclusion</small>
+          </span>
+          <span class="st">ON</span>
+          <span class="knob"></span>
+        </button>
+      </div>
+
       <header class="hud">
         <div class="hud-lead">
           <button
@@ -241,7 +317,13 @@
                 WARNING: Oxygen levels low. Begin return to Base Camp.
               </p>
             </section>
-            <div class="legend" id="legend" aria-label="Map legend"></div>
+            <div
+              class="legend"
+              id="legend"
+              aria-label="Map legend"
+              aria-live="polite"
+              aria-atomic="true"
+            ></div>
           </div>
           <div id="banner" class="alertbar ok" role="status" aria-live="polite">
             <span id="bmsg"></span>
@@ -264,22 +346,6 @@
             value="0"
             aria-label="EVA route progress"
           >
-          <div class="wps">
-            <button class="wp" type="button" data-id="base">Base</button>
-            <button class="wp" type="button" data-id="s1">Site 1</button>
-            <button class="wp" type="button" data-id="s2">Site 2</button>
-            <button class="wp" type="button" data-id="s3">Site 3</button>
-            <button class="wp" type="button" id="autoBtn">Run route</button>
-            <button
-              class="wp"
-              type="button"
-              id="walkBtn"
-              aria-pressed="false"
-            >
-              Simulate Walk
-            </button>
-          </div>
-          <small class="walk-hint">Click to start mission simulation and trigger hazard alerts.</small>
         </div>
         <div class="deck-critical">
           <p class="readout" id="deckO2">Suit O2: 100%</p>
@@ -307,61 +373,6 @@
           <b>Mission Control</b>
           <button class="hb" id="closeMenu" type="button">Close</button>
         </div>
-
-        <h3>1. Terrain &amp; Data Layers</h3>
-        <button class="sw" role="switch" aria-checked="true" data-l="mola">
-          <span class="t">
-            <b>MOLA Color-Shaded Relief</b>
-            <small>NASA Mars Trek global mosaic · 463 m · no slope classification</small>
-            <small class="layer-status" id="rasterSampleStatus">No local numeric samples</small>
-          </span>
-          <span class="st">ON</span>
-          <span class="knob"></span>
-        </button>
-        <button class="sw" role="switch" aria-checked="false" data-l="thermal">
-          <span class="t">
-            <b>THEMIS Day/Night IR Mosaics</b>
-            <small>NASA Mars Trek controlled mosaics · 100 m</small>
-          </span>
-          <span class="st">OFF</span>
-          <span class="knob"></span>
-        </button>
-        <button class="sw" role="switch" aria-checked="false" data-l="crism">
-          <span class="t">
-            <b>CRISM Mineral &amp; Geology</b>
-            <small>Query NASA Mars Trek regional catalog</small>
-            <small class="layer-status" id="crismStatus">Not queried</small>
-          </span>
-          <span class="st">OFF</span>
-          <span class="knob"></span>
-        </button>
-        <button class="sw" role="switch" aria-checked="false" data-l="radiation">
-          <span class="t">
-            <b>Radiation Risk · DONKI SEP Events</b>
-            <small>Global event context; no Mars surface-dose measurement</small>
-            <small class="layer-status" id="radiationStatus">Not queried</small>
-          </span>
-          <span class="st">OFF</span>
-          <span class="knob"></span>
-        </button>
-        <small class="layer-status">DONKI SEP context: Mars lacks a global magnetic field. Seek shelter in lava tubes during Solar Particle Events.</small>
-        <small
-          class="layer-status"
-          title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."
-        >Dust Storm Risk: Moderate</small>
-
-        <h3>2. Route &amp; Navigation</h3>
-        <button class="big home" id="guideBtn" type="button" aria-pressed="false">
-          Show return-to-base guidance
-        </button>
-        <button class="sw" id="audioSw" role="switch" aria-checked="true">
-          <span class="t">
-            <b>Audio hazard alerts</b>
-            <small>Sound cue near the configured planning exclusion</small>
-          </span>
-          <span class="st">ON</span>
-          <span class="knob"></span>
-        </button>
 
         <h3>3. Suit &amp; Communications</h3>
         <div class="tele">

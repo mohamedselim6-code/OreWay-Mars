@@ -1481,32 +1481,29 @@
     update()
   });
   /* === 8. Layer controls and map legend === */
-  var PINS =
-    '<div class="keygrid">' +
-    '<p><i style="background:#10B981"></i>Configured traverse</p>' +
-    '<p>Markers: sites</p></div>';
   var LG = {
-    def: '<h4>Map legend</h4>' + PINS,
-    mola: '<h4>MOLA · color-shaded relief</h4>' +
-      '<p>Global 463 m mosaic. This layer does not classify slope.</p>' + PINS,
-    thermal: '<h4>THEMIS · IR mosaics</h4>' +
+    def: '<h4>Map legend</h4><p>No map data layers are active.</p>',
+    mola: '<h4>MOLA · relief &amp; traverse</h4>' +
+      '<p><i style="background:#10B981"></i>Green = Safe Route</p>' +
+      '<p><i style="background:#EF4444"></i>Red = Crater Hazard</p>' +
+      '<p>Global 463 m mosaic; slope is not classified.</p>',
+    thermal: '<h4>THEMIS · thermal context</h4>' +
       '<p id="themisLegendStatus">Day IR controlled mosaic selected.</p>' +
       '<p>100 m products; not current surface-temperature measurements.</p>',
-    crism: '<h4>CRISM · catalog detections</h4>' +
+    crism: '<h4>CRISM · mineral detections</h4>' +
       '<p id="crismLegendStatus">Regional catalog not queried.</p>' +
-      '<p>Catalog classes do not identify mineral species.</p>',
+      '<p><i style="background:#F59E0B"></i>Yellow = Mineral Deposits</p>' +
+      '<p>Catalog classes do not confirm mineral species.</p>',
     radiation: '<h4>NASA DONKI · SEP events</h4>' +
       '<p id="sepLegendStatus">NASA DONKI event context; no surface dose measurement</p>' +
       '<p id="sepLegendState" class="sep-state">Event status unavailable</p>' +
-      '<p><i style="background:#10B981"></i>No event reported in query window</p>' +
-      '<p><i style="background:#EF4444"></i>SEP event reported in query window</p>' +
+      '<p><i style="background:#10B981"></i>Green = No event reported</p>' +
+      '<p><i style="background:#EF4444"></i>Red = SEP event reported</p>' +
       '<p>Global event context only; not a Mars surface-dose map.</p>' +
       '<p><a href="https://api.nasa.gov/DONKI/SEP" target="_blank" rel="noopener noreferrer">NASA DONKI SEP API</a></p>'
   };
   function legend() {
-    var activeLegend = LAY.indexOf('radiation') >= 0
-      ? 'radiation'
-      : LAY[LAY.length - 1] || 'def';
+    var activeLegend = LAY[LAY.length - 1] || 'def';
     $('#legend').innerHTML = LG[activeLegend];
     if (activeLegend === 'radiation') updateSepLegend();
     if (activeLegend === 'thermal') {

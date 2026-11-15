@@ -3328,11 +3328,11 @@ h1 {
 
 /* === 11. Mission Control layer cards === */
 
-#menu > .sw[data-l="mola"],
-#menu > .sw[data-l="thermal"],
-#menu > .sw[data-l="crism"],
-#menu > .sw[data-l="radiation"],
-#menu > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
+#mission-sidebar > .sw[data-l="mola"],
+#mission-sidebar > .sw[data-l="thermal"],
+#mission-sidebar > .sw[data-l="crism"],
+#mission-sidebar > .sw[data-l="radiation"],
+#mission-sidebar > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
   margin: 0 0 12px;
   padding: 16px;
   background: #1e1e1e;
@@ -3340,15 +3340,15 @@ h1 {
   border-radius: 8px
 }
 
-#menu > .sw[data-l="mola"],
-#menu > .sw[data-l="thermal"],
-#menu > .sw[data-l="crism"],
-#menu > .sw[data-l="radiation"] {
+#mission-sidebar > .sw[data-l="mola"],
+#mission-sidebar > .sw[data-l="thermal"],
+#mission-sidebar > .sw[data-l="crism"],
+#mission-sidebar > .sw[data-l="radiation"] {
   display: flex;
   min-height: 0
 }
 
-#menu > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
+#mission-sidebar > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
   display: block;
   line-height: 1.45
 }
@@ -3383,15 +3383,15 @@ body.dayops .briefing-init:hover {
   background: #082F70
 }
 
-#menu .sw[aria-checked="true"] .knob {
+#mission-sidebar .sw[aria-checked="true"] .knob {
   background: #0B3D91
 }
 
-#menu .sw[aria-checked="true"] .knob::after {
+#mission-sidebar .sw[aria-checked="true"] .knob::after {
   background: #FFFFFF
 }
 
-#menu .sw[aria-checked="true"] .st {
+#mission-sidebar .sw[aria-checked="true"] .st {
   color: #0B3D91
 }
 
@@ -3564,4 +3564,186 @@ body.dayops .alertbar.alert {
     width: min(260px, calc(100% - 12px));
     padding: 8px 10px
   }
+}
+
+/* === 15. Persistent Mission Control sidebar === */
+
+body.eva #app,
+body.dayops #app {
+  grid-template-columns: 320px minmax(0, 1fr);
+  padding-left: 0
+}
+
+#mission-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  height: 100vh;
+  height: 100dvh;
+  padding: 1rem;
+  overflow: auto;
+  background: #1E1E1E;
+  border-right: 1px solid #333333;
+  color: #FFFFFF
+}
+
+#mission-sidebar > * {
+  flex: 0 0 auto;
+  min-width: 0
+}
+
+.mission-sidebar-header {
+  padding: 0 0 .75rem;
+  border-bottom: 1px solid #333333
+}
+
+.mission-sidebar-header h2 {
+  margin: 0;
+  color: #FFFFFF;
+  font: 600 1rem/1.4 var(--body);
+  letter-spacing: .04em
+}
+
+#mission-sidebar h3 {
+  margin: 1rem 0 .6rem;
+  color: #FFFFFF;
+  font: 600 .85rem/1.4 var(--body);
+  letter-spacing: .04em;
+  text-transform: uppercase
+}
+
+#mission-sidebar > .layer-status:not([title]) {
+  display: block;
+  margin: 0 0 .65rem;
+  color: #B8B8B8;
+  font-size: .76rem;
+  line-height: 1.45
+}
+
+#mission-sidebar .wps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  margin: .65rem 0 0
+}
+
+#mission-sidebar .sw {
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.4
+}
+
+#mission-sidebar .sw .t {
+  min-width: 0
+}
+
+#mission-sidebar .sw .t b,
+#mission-sidebar .sw .t small {
+  line-height: 1.4;
+  overflow-wrap: anywhere
+}
+
+#mission-sidebar .walk-hint {
+  margin: .4rem 0 .65rem
+}
+
+#mission-sidebar #audioSw {
+  margin-top: .65rem
+}
+
+body.eva .hud,
+body.dayops .hud {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0
+}
+
+body.eva .work,
+body.dayops .work {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0
+}
+
+body.eva .deck,
+body.dayops .deck {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0
+}
+
+body.eva .deck .wps,
+body.dayops .deck .wps,
+body.eva .deck #guideBtn,
+body.dayops .deck #guideBtn,
+body.eva .deck #autoBtn,
+body.dayops .deck #autoBtn,
+body.eva .deck #walkBtn,
+body.dayops .deck #walkBtn {
+  display: none !important
+}
+
+.menu {
+  left: 320px;
+  width: min(410px, calc(100vw - 320px));
+  transform: translateX(calc(-100% - 320px))
+}
+
+@media (max-width: 760px) {
+  .menu {
+    left: 0;
+    width: min(410px, 92vw);
+    transform: translateX(-102%)
+  }
+}
+
+/* === 16. Active-layer map legend === */
+
+#legend {
+  top: auto;
+  right: auto;
+  bottom: 34px;
+  left: 10px;
+  z-index: 1100;
+  width: min(270px, calc(100% - 20px));
+  max-width: calc(100% - 20px);
+  max-height: min(45%, 250px);
+  overflow: auto;
+  padding: .55rem .7rem;
+  background: rgba(15, 23, 42, .92);
+  border: 1px solid rgba(148, 163, 184, .48);
+  border-radius: 4px;
+  color: #F8FAFC;
+  font-size: .75rem;
+  line-height: 1.45
+}
+
+#legend h4 {
+  margin: 0 0 .35rem;
+  color: #F8FAFC;
+  font: 600 .85rem/1.4 var(--body)
+}
+
+#legend p {
+  margin: .16rem 0
+}
+
+#legend a {
+  color: #7DD3FC
+}
+
+#legend a:hover,
+#legend a:focus-visible {
+  color: #BAE6FD
+}
+
+#legend i {
+  width: .9em;
+  height: .9em;
+  margin-right: .4em;
+  border-radius: 2px
 }
