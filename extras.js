@@ -4,9 +4,8 @@
 
   var guideButton = document.getElementById('guideBtn');
   var alertPanel = document.querySelector('.system-alerts');
-  var signalDelay = document.querySelector('.deck-critical p[title^="Autonomous decision support"]');
 
-  if (!guideButton || !alertPanel || !signalDelay) {
+  if (!guideButton || !alertPanel) {
     console.error('Solar Particle Event controls could not initialize: required UI elements are missing.');
     return;
   }
@@ -16,7 +15,7 @@
   solarAlert.className = 'system-alert-item';
   solarAlert.hidden = true;
   solarAlert.textContent =
-    'Simulated Solar Particle Event active. Elevated radiation risk; return guidance to Base Camp is enabled.';
+    'Solar Particle Event scenario active. Simulated planning-risk input; return guidance to Base Camp is enabled.';
   alertPanel.appendChild(solarAlert);
 
   var simulateButton = document.createElement('button');
@@ -56,10 +55,4 @@
 
   document.addEventListener('oreway:spe-reset', resetControls);
   document.addEventListener('oreway:spe-rejected', resetControls);
-
-  var delayNote = document.createElement('small');
-  delayNote.className = 'fn';
-  delayNote.textContent =
-    '14m 20s delay: Houston cannot intervene in time, so the local system supports autonomous decisions.';
-  signalDelay.insertAdjacentElement('afterend', delayNote);
 })();

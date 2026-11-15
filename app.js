@@ -493,9 +493,9 @@
   var gisTilesReady = false;
   var gisTileTimeout = 0;
   var GIS_DUNE_WARNING =
-    'CRITICAL WARNING: Approaching Hazard Zone (Crater Rim). Reroute Recommended.';
+    'WARNING: Approaching the configured crater-margin planning exclusion. Reroute recommended.';
   var GIS_OXYGEN_WARNING =
-    'WARNING: Oxygen levels low. Begin return to Base Camp.';
+    'Planning oxygen estimate reached the return threshold. Begin return to Base Camp.';
   var GIS_DUNE_WARNING_DISTANCE_M = 600;
   var GIS_RADAR_RADIUS_M = 250;
   var GIS_RISK_SAMPLE_RADIUS_M = 250;
@@ -1086,8 +1086,8 @@
     var coordinates = h ? null : GIS_STATIONS[s.id];
     var ch = h ? s.chips : [
       ['Distance', s.km + ' km'],
-      ['Walk time', fmt(s.km)],
-      ['Suit O₂ on arrival', arrival + '%'],
+      ['Estimated walk time', fmt(s.km)],
+      ['Estimated suit O₂ on arrival', arrival + '%'],
       ['Coordinates', coordinates[0].toFixed(3) + '°N, ' + coordinates[1].toFixed(3) + '°E']
     ];
     var sampleNote = '';
@@ -1104,8 +1104,11 @@
         ' m elevation · ' + sample.slopeDegrees.toFixed(1) + '° slope' +
         crismNote + '</p>';
     }
+    var siteNote = s.note && s.note !== s.tag && s.note !== s.tag + '.'
+      ? '<p class="note">' + s.note + '</p>'
+      : '';
     $('#info').innerHTML =
-      '<h3>' + s.name + '</h3><p class="tagline">' + s.tag +
+      '<h3>' + (s.l1 || s.name) + '</h3><p class="tagline">' + s.tag +
       '</p><div class="chips">' + ch.map(function (c) {
       return '<div class="cp"><small>' + c[0] + '</small><b>' + c[1] + '</b></div>'
     }).join('') + '</div>' + s.m.map(function (m) {
@@ -1113,7 +1116,7 @@
         '<div class="bar2"><i data-w="' + m[1] +
         '" style="background:' + m[2] + '"></i></div><b>' +
         m[1] + '%</b></div>'
-    }).join('') + '<p class="note">' + s.note + '</p>' + sampleNote +
+    }).join('') + siteNote + sampleNote +
     '<p class="fn">Route and traverse values are mission-planning parameters, not instrument measurements.</p>';
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
@@ -1156,7 +1159,7 @@
   walkAnimation = 0, walkSimulationActive = false,
   duneWarningActive = false, nightThermalAuto = false,
   solarParticleEventActive = false, guideBeforeSolarEvent = false,
-  audio = Telemetry.createAudioUtilities(), ambientOn = false;
+  alertsWereActive = false, audio = Telemetry.createAudioUtilities(), ambientOn = false;
   function setRiskScore(score) {
     riskScore = Math.max(0, Math.min(100, Math.round(score)));
     var value = $('#riskScore');
@@ -1319,26 +1322,48 @@
           ? 'weak'
           : 'safe';
     var weak = st === 'weak';
-    $('#hazardSystemAlert').hidden = !approachingDunes;
+    var exclusionAlert = approachingDunes || inHazard;
+    var activeAlertCount =
+      (exclusionAlert ? 1 : 0) +
+      (oxygenLow ? 1 : 0) +
+      (solarParticleEventActive ? 1 : 0);
+    var activeAlerts = activeAlertCount > 0;
+    $('#hazardSystemAlert').hidden = !exclusionAlert;
     $('#oxygenSystemAlert').hidden = !oxygenLow;
     $('#solarEventAlert').hidden = !solarParticleEventActive;
     $('#systemAlertsClear').hidden =
-      approachingDunes || oxygenLow || solarParticleEventActive;
+      activeAlerts;
+    $('#systemAlertsStatus').textContent = activeAlertCount
+      ? activeAlertCount + ' active'
+      : 'No alerts';
+    if (activeAlerts && !alertsWereActive) {
+      $('#alertsDisclosure').open = true;
+    } else if (!activeAlerts && alertsWereActive) {
+      $('#alertsDisclosure').open = false;
+    }
+    alertsWereActive = activeAlerts;
     T = {
       km: km,
       o2: o2,
       ret: ret,
       weak: weak
     };
-    var key = st + (near ? near.id: '') + (oxygenLow ? ':oxygen-low': '');
+    var key = st + (near ? near.id: '') +
+      (oxygenLow ? ':oxygen-low': '') +
+      (solarParticleEventActive ? ':solar-event': '');
     if (key !== lastKey) {
       lastKey = key;
-      if (st === 'dune-warning') banner('alert', GIS_DUNE_WARNING);
-      else if (oxygenLow) banner('alert', GIS_OXYGEN_WARNING);
+      if (solarParticleEventActive) {
+        banner('alert', 'Solar Particle Event scenario active; return to Base Camp.');
+      } else if (st === 'dune-warning') {
+        banner('alert', 'Configured crater-margin planning exclusion nearby; reroute recommended.');
+      } else if (oxygenLow) {
+        banner('alert', GIS_OXYGEN_WARNING);
+      }
       else if (st === 'target') banner('target', 'Waypoint reached: ' + near.name + '.');
-      else if (st === 'danger') banner('alert', 'PLANNING EXCLUSION: follow the configured traverse around the crater margin.');
-      else if (st === 'weak') banner('weak', 'SIGNAL: terrain obstruction. Orbiter relay in use.');
-      else banner('ok', 'ROUTE STATUS: within the configured traverse corridor.');
+      else if (st === 'danger') banner('alert', 'Configured planning exclusion intersects the current position.');
+      else if (st === 'weak') banner('weak', 'Terrain obstruction; configured orbiter relay in use.');
+      else banner('ok', 'Route inside configured traverse corridor.');
     }
     $('#haz').classList.toggle('alerting', st === 'danger');
     if (gisHazardLayer) gisHazardLayer.setStyle({
@@ -1368,16 +1393,31 @@
     slider.value = Math.round(cur / TL * 1000);
     slider.setAttribute('aria-valuetext', km.toFixed(1) + ' km');
     $('#simKm').textContent = km.toFixed(1) + ' km of 8.3 km';
-    $('#simO2').textContent = o2 + '%';
     $('#deckO2Value').textContent = o2 + '%';
     $('#o2Value').textContent = o2 + '%';
     $('#o2Gauge').style.setProperty('--gauge-progress', o2 + '%');
-    $('#o2Gauge').setAttribute('aria-label', 'Oxygen ' + o2 + ' percent');
-    $('#o2Read').textContent = 'Estimated return reserve: ' + ret + ' min';
+    $('#o2Gauge').setAttribute('aria-label', 'Estimated oxygen ' + o2 + ' percent');
+    $('#o2Read').textContent = 'Traverse-time estimate: ' + ret + ' min';
     $('#signalValue').textContent = weak ? 'Relay': 'Strong';
     $('#signalGauge').classList.toggle('weak', weak);
-    $('#signalGauge').setAttribute('aria-label', 'Signal ' + (weak ? 'weak, orbiter relay': 'strong'));
-    $('#sigRead').textContent = weak ? 'Orbiter relay; terrain obstruction': 'Base Camp direct link';
+    $('#signalGauge').setAttribute('aria-label', 'Modelled signal ' + (weak ? 'weak, orbiter relay': 'strong'));
+    $('#sigRead').textContent = weak
+      ? 'Configured relay: orbiter; terrain obstruction'
+      : 'Configured link: Base Camp direct';
+    var nextWaypoint = null;
+    for (var waypointIndex = 1; waypointIndex < ST.length; waypointIndex++) {
+      if (ST[waypointIndex].routeLength > cur + 1) {
+        nextWaypoint = ST[waypointIndex];
+        break;
+      }
+    }
+    if (!nextWaypoint && cur >= TL - 1) nextWaypoint = ST[0];
+    var nextWaypointElement = $('#nextWaypoint');
+    nextWaypointElement.textContent = 'Next waypoint: ' +
+      (nextWaypoint ? nextWaypoint.l1 : 'none configured');
+    nextWaypointElement.title = nextWaypoint
+      ? 'Next configured traverse waypoint: ' + nextWaypoint.name
+      : 'No next traverse waypoint is configured.';
     var lk = $('#link');
     lk.setAttribute('x1', p.x);
     lk.setAttribute('y1', p.y);
@@ -1424,10 +1464,12 @@
   });
   $$('.wp[data-id]').forEach(function (b) {
     b.addEventListener('click', function () {
-      pick(b.dataset.id)
+      pick(b.dataset.id);
+      closeMissionSidebarOnMobile();
     })
   });
   $('#autoBtn').addEventListener('click', function () {
+    closeMissionSidebarOnMobile();
     resetWalkSimulation();
     riskHasInput = true;
     if (auto) {
@@ -1451,6 +1493,7 @@
     })(t0);
   });
   $('#walkBtn').addEventListener('click', function () {
+    closeMissionSidebarOnMobile();
     if (walkAnimation) {
       stopWalk();
       return;
@@ -1488,6 +1531,7 @@
     })(previousTime);
   });
   $('#guideBtn').addEventListener('click', function () {
+    closeMissionSidebarOnMobile();
     guide = !guide;
     this.classList.toggle('live', guide);
     this.setAttribute('aria-pressed', guide);
@@ -1496,10 +1540,10 @@
   });
   /* === 8. Layer controls and map legend === */
   var LG = {
-    def: '<h4>Map legend</h4><p>No map data layers are active.</p>',
+    def: '<p>No map data layers are active.</p>',
     mola: '<h4>MOLA · relief &amp; traverse</h4>' +
-      '<p><i style="background:#10B981"></i>Green = Safe Route</p>' +
-      '<p><i style="background:#EF4444"></i>Red = Crater Hazard</p>' +
+      '<p><i style="background:#10B981"></i>Green = Configured traverse</p>' +
+      '<p><i style="background:#EF4444"></i>Red = Crater-margin planning exclusion</p>' +
       '<p>Global 463 m mosaic; slope is not classified.</p>',
     thermal: '<h4>THEMIS · thermal context</h4>' +
       '<p id="themisLegendStatus">Day IR controlled mosaic selected.</p>' +
@@ -1571,7 +1615,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Elevation & Oxygen Profile',
+            text: 'Illustrative planning estimate · not live telemetry',
             color: '#F8FAFC',
             font: {
               size: 11,
@@ -1740,10 +1784,12 @@
       ambientOn = false;
       this.textContent = 'Toggle surface audio';
       this.classList.remove('live');
+      this.setAttribute('aria-pressed', 'false');
     } else if (audio.startAmbient()) {
       ambientOn = true;
       this.textContent = 'Stop surface audio';
       this.classList.add('live');
+      this.setAttribute('aria-pressed', 'true');
     } else {
       banner('warn', 'Web Audio is unavailable in this browser.');
     }
@@ -1849,7 +1895,87 @@
     }
   });
   var menu = $('#menu'), scrim = $('#scrim');
+  var missionSidebar = $('#mission-sidebar'), sidebarToggle = $('#sidebarToggle');
+  var app = $('#app');
+  var layerSheet = $('#layerSheet');
+  var mobileTabs = $$('.bottom-nav-tab');
+  var mobileTabsInitialized = false;
+  var wasMobileLayout = innerWidth < 768;
+  function setActiveTab(tab) {
+    if (innerWidth >= 768 || !app) return;
+    if (!mobileTabsInitialized) {
+      layerSheet.open = false;
+      mobileTabsInitialized = true;
+    }
+    app.dataset.activeTab = tab;
+    mobileTabs.forEach(function (button) {
+      button.setAttribute('aria-selected', button.dataset.tab === tab);
+    });
+    missionSidebar.inert = tab !== 'map' && tab !== 'sites' && tab !== 'report';
+    menu.inert = tab !== 'report';
+    menu.classList.remove('open');
+    scrim.classList.remove('on');
+    if (tab === 'map' && gisMap) {
+      requestAnimationFrame(function () {
+        gisMap.invalidateSize({ pan: false });
+      });
+    }
+    if (tab === 'route' && profileChart) {
+      requestAnimationFrame(function () {
+        profileChart.resize();
+      });
+    }
+  }
+  mobileTabs.forEach(function (button) {
+    button.addEventListener('click', function () {
+      setActiveTab(button.dataset.tab);
+    });
+  });
+  function setMissionSidebarOpen(open) {
+    if (innerWidth < 768) {
+      if (open) setActiveTab('sites');
+      return;
+    }
+    missionSidebar.classList.toggle('open', open);
+    missionSidebar.inert = !open && innerWidth < 768;
+    sidebarToggle.setAttribute('aria-expanded', open);
+    sidebarToggle.setAttribute(
+      'aria-label',
+      open ? 'Close Mission Control sidebar' : 'Open Mission Control sidebar'
+    );
+  }
+  function closeMissionSidebarOnMobile() {
+    if (innerWidth < 768 && missionSidebar.classList.contains('open')) {
+      setMissionSidebarOpen(false);
+    }
+  }
+  sidebarToggle.addEventListener('click', function () {
+    setMissionSidebarOpen(!missionSidebar.classList.contains('open'));
+  });
+  addEventListener('resize', function () {
+    if (innerWidth >= 768) {
+      if (wasMobileLayout) layerSheet.open = true;
+      if (missionSidebar.classList.contains('open')) setMissionSidebarOpen(false);
+      missionSidebar.inert = false;
+      menu.inert = !menu.classList.contains('open');
+    } else {
+      if (!wasMobileLayout) layerSheet.open = false;
+      if (missionSidebar.classList.contains('open')) {
+        missionSidebar.classList.remove('open');
+      }
+      if (menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        scrim.classList.remove('on');
+      }
+      setActiveTab(app.dataset.activeTab || 'map');
+    }
+    wasMobileLayout = innerWidth < 768;
+  });
   function openMenu(o) {
+    if (innerWidth < 768) {
+      if (o) setActiveTab('report');
+      return;
+    }
     menu.classList.toggle('open', o);
     scrim.classList.toggle('on', o);
     menu.inert = !o;
@@ -1866,7 +1992,13 @@
     openMenu(false)
   });
   addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && menu.classList.contains('open')) openMenu(false)
+    if (e.key === 'Escape') {
+      if (menu.classList.contains('open')) openMenu(false);
+      if (missionSidebar.classList.contains('open')) {
+        setMissionSidebarOpen(false);
+        sidebarToggle.focus();
+      }
+    }
   });
   $$('.sw[data-l]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -1917,6 +2049,7 @@
     var b = document.body;
     if (b.classList.contains('eva')) return;
     b.classList.add('eva', 'dayops');
+    if (innerWidth < 768) setActiveTab('map');
     setupGisMap();
     renderProfileChart();
     pick('base', null, false);
@@ -1925,7 +2058,7 @@
       if (!b.classList.contains('eva')) return;
       window.__oreHold = true;
       b.classList.add('mapped');
-      $('#menuBtn').focus();
+      (innerWidth < 768 ? $('#tab-map') : $('#menuBtn')).focus();
     }, 1800);
   }
   document.addEventListener('oreway:start', begin);
@@ -1955,6 +2088,7 @@
       ambientOn = false;
       $('#marsBtn').textContent = 'Toggle surface audio';
       $('#marsBtn').classList.remove('live');
+      $('#marsBtn').setAttribute('aria-pressed', 'false');
     }
     world.classList.remove('night');
     $('#modeBtn').textContent = 'Day Ops';

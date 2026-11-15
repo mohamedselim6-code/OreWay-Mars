@@ -67,12 +67,50 @@
       <p id="msg" aria-live="polite"></p>
     </main>
 
-    <section id="app" aria-labelledby="mission-heading">
+    <section id="app" aria-labelledby="mission-heading" data-active-tab="map">
+      <div class="dashboard-flow">
       <div id="mission-sidebar" role="complementary" aria-label="Mission Control">
         <div class="mission-sidebar-header">
           <h2>Mission Control</h2>
         </div>
-        <h3>1. Terrain &amp; Data Layers</h3>
+        <div class="mission-site-controls">
+          <div class="mission-route-controls">
+        <h3>1. Mission selector &amp; route</h3>
+        <button class="big home" id="guideBtn" type="button" aria-pressed="false">
+          Show return-to-base guidance
+        </button>
+        <div class="wps" aria-label="Select a route waypoint">
+          <button class="wp" type="button" data-id="base" title="Base Camp Alpha" aria-label="Select Base Camp Alpha">Base</button>
+          <button class="wp" type="button" data-id="s1" title="Volcanic Basalt &amp; Olivine" aria-label="Select Site 1: Volcanic Basalt and Olivine">Site 1</button>
+          <button class="wp" type="button" data-id="s2" title="Carbonate-Bearing Terrain" aria-label="Select Site 2: Carbonate-Bearing Terrain">Site 2</button>
+          <button class="wp" type="button" data-id="s3" title="Crater Rim (Phyllosilicates)" aria-label="Select Site 3: Crater Rim (Phyllosilicates)">Site 3</button>
+          <button class="wp" type="button" id="autoBtn">Run route</button>
+          <button
+            class="wp"
+            type="button"
+            id="walkBtn"
+            aria-pressed="false"
+          >
+            Simulate Walk
+          </button>
+        </div>
+        <small class="walk-hint">Simulation only; alerts use the configured exclusion and oxygen planning estimate.</small>
+          </div>
+          <div class="audio-report-control">
+        <button class="sw" id="audioSw" role="switch" aria-checked="true">
+          <span class="t">
+            <b>Audio hazard alerts</b>
+            <small>Sound cue near the configured planning exclusion</small>
+          </span>
+          <span class="st">ON</span>
+          <span class="knob"></span>
+        </button>
+          </div>
+        </div>
+
+        <details class="layer-sheet" id="layerSheet" open>
+          <summary>Map layers</summary>
+          <div class="layer-controls">
         <button class="sw" role="switch" aria-checked="true" data-l="mola">
           <span class="t">
             <b>MOLA Color-Shaded Relief</b>
@@ -108,65 +146,52 @@
           <span class="st">OFF</span>
           <span class="knob"></span>
         </button>
-        <small class="layer-status">DONKI SEP context: Mars lacks a global magnetic field. Seek shelter in lava tubes during Solar Particle Events.</small>
+        <small class="layer-status">DONKI event context only; no local Mars surface-dose measurement.</small>
         <small
-          class="layer-status"
-          title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."
-        >Dust Storm Risk: Moderate</small>
+          class="layer-status dust-status"
+          title="NASA MARCI/MCS dust-storm data is not connected in this dashboard."
+        >Dust-storm data: not loaded</small>
+          </div>
+        </details>
 
-        <h3>2. Route &amp; Navigation</h3>
-        <button class="big home" id="guideBtn" type="button" aria-pressed="false">
-          Show return-to-base guidance
-        </button>
-        <div class="wps">
-          <button class="wp" type="button" data-id="base">Base</button>
-          <button class="wp" type="button" data-id="s1">Site 1</button>
-          <button class="wp" type="button" data-id="s2">Site 2</button>
-          <button class="wp" type="button" data-id="s3">Site 3</button>
-          <button class="wp" type="button" id="autoBtn">Run route</button>
-          <button
-            class="wp"
-            type="button"
-            id="walkBtn"
-            aria-pressed="false"
-          >
-            Simulate Walk
-          </button>
+        <div class="selected-site-panel">
+        <h3>3. Selected site</h3>
+        <section class="info" id="info" aria-live="polite"></section>
         </div>
-        <small class="walk-hint">Click to start mission simulation and trigger hazard alerts.</small>
-        <button class="sw" id="audioSw" role="switch" aria-checked="true">
-          <span class="t">
-            <b>Audio hazard alerts</b>
-            <small>Sound cue near the configured planning exclusion</small>
-          </span>
-          <span class="st">ON</span>
-          <span class="knob"></span>
-        </button>
       </div>
 
       <header class="hud">
         <div class="hud-lead">
           <button
+            class="hb sidebar-toggle"
+            id="sidebarToggle"
+            type="button"
+            aria-controls="mission-sidebar"
+            aria-expanded="false"
+            aria-label="Open Mission Control sidebar"
+          >☰</button>
+          <button
             class="hb"
             id="menuBtn"
             type="button"
-            aria-controls="menu"
+            aria-controls="menu audioSw"
             aria-expanded="false"
           >
             Systems
           </button>
-          <p class="hud-title">Mission Control</p>
+          <p class="hud-title">Surface operations</p>
         </div>
         <h2 id="mission-heading">Syrtis Major Planum</h2>
         <div class="hud-end">
           <p class="hud-coords">8.4°N, 69.5°E</p>
+          <span class="mission-status-chip">Planning</span>
           <button class="hb overview-btn" id="overviewBtn" type="button">Overview</button>
           <button class="hb" id="modeBtn" type="button" aria-pressed="false">Day Ops</button>
         </div>
       </header>
 
       <div class="work">
-        <div class="mapbox">
+        <div class="mapbox" id="mapbox">
           <div class="world" id="world">
             <div
               id="leafletMap"
@@ -307,33 +332,40 @@
               <span id="cursorLatLon">Cursor: --</span>
               <span class="north-arrow" aria-label="North">↑ <b>N</b></span>
             </div>
-            <section class="system-alerts" aria-labelledby="systemAlertsHeading" aria-live="assertive">
-              <h2 id="systemAlertsHeading">Active System Alerts</h2>
+          </div>
+        </div>
+        <div class="map-tools" aria-label="Map status and supporting information">
+          <details class="map-disclosure" id="alertsDisclosure">
+            <summary>
+              Active alerts
+              <span id="systemAlertsStatus" aria-live="polite">No alerts</span>
+            </summary>
+            <section class="system-alerts" aria-label="Active system alert details" aria-live="assertive">
               <p id="systemAlertsClear">No active alerts.</p>
               <p id="hazardSystemAlert" class="system-alert-item" hidden>
-                CRITICAL WARNING: Approaching Hazard Zone (Crater Rim). Reroute Recommended.
+                WARNING: Approaching the configured crater-margin planning exclusion. Reroute recommended.
               </p>
               <p id="oxygenSystemAlert" class="system-alert-item" hidden>
-                WARNING: Oxygen levels low. Begin return to Base Camp.
+                Planning oxygen estimate reached the return threshold. Begin return to Base Camp.
               </p>
             </section>
+          </details>
+          <details class="map-disclosure" id="legendDisclosure">
+            <summary>Map legend</summary>
             <div
               class="legend"
               id="legend"
-              aria-label="Map legend"
+              aria-label="Active map layer legend"
               aria-live="polite"
               aria-atomic="true"
             ></div>
-          </div>
-          <div id="banner" class="alertbar ok" role="status" aria-live="polite">
-            <span id="bmsg"></span>
-          </div>
+          </details>
         </div>
         <div
           id="profileChartContainer"
           class="profile-chart-container"
           role="img"
-          aria-label="Elevation and oxygen profile over an 8.3 kilometer traverse"
+          aria-label="Illustrative elevation and oxygen planning estimates over an 8.3 kilometer traverse; not live telemetry"
         >
           <canvas id="profileChart"></canvas>
         </div>
@@ -344,7 +376,6 @@
           <div class="simh">
             <b>Traverse progress</b>
             <span id="simKm">0.0 km of 8.3 km</span>
-            <span>O₂ <b id="simO2">100%</b></span>
           </div>
           <input
             type="range"
@@ -355,16 +386,19 @@
             aria-label="EVA route progress"
           >
         </div>
-        <div class="deck-critical">
+        <div id="banner" class="alertbar ok" role="status" aria-live="polite">
+          <span id="bmsg"></span>
+        </div>
+        <div class="deck-critical" id="deck-critical">
           <p class="readout" id="deckO2">
-            Suit O2: <span id="deckO2Value">100%</span>
+            Suit O₂: <span id="deckO2Value">100%</span>
             <small>(Simulated Planning Estimate)</small>
           </p>
           <p
             class="readout risk-readout"
             title="Planning index, not a measured risk value. MOLA uses nearby numeric samples when available, otherwise configured exclusion-zone proximity; THEMIS and DONKI add context weights, not measured temperature or Mars surface dose."
           >
-            Risk Score (0-100):
+            Risk score:
             <b id="riskScore" class="risk-value risk-low">0</b>
             <small>(Simulated Planning Estimate)</small>
           </p>
@@ -372,9 +406,10 @@
             class="readout"
             title="Autonomous decision support is required during communications delay."
           >
-            Signal Delay: 14m 20s (Autonomous Decision Support Required)
+            Signal delay: 14m 20s
+            <small>(Configured planning value; not live telemetry)</small>
           </p>
-          <p class="readout">Next Waypoint: 150m</p>
+          <p class="readout" id="nextWaypoint" title="Next configured traverse waypoint.">Next waypoint: Site 1</p>
           <p class="sos-note" id="sosNote" role="status"></p>
           <button class="sos" id="sosBtn" type="button" aria-pressed="false">SOS</button>
         </div>
@@ -383,44 +418,54 @@
       <div class="scrim" id="scrim"></div>
       <aside class="menu" id="menu" aria-label="Mission menu" inert>
         <div class="top">
-          <b>Mission Control</b>
+          <b>Telemetry &amp; mission tools</b>
           <button class="hb" id="closeMenu" type="button">Close</button>
         </div>
 
-        <h3>3. Suit &amp; Communications</h3>
+        <section class="report-notes" aria-labelledby="reportNotesHeading">
+          <h3 id="reportNotesHeading">Data sources &amp; limitations</h3>
+          <ul>
+            <li>MOLA: regional color-shaded relief; no local numeric samples or slope classification loaded.</li>
+            <li>THEMIS: controlled day/night infrared mosaics, not current surface-temperature readings.</li>
+            <li>CRISM: regional catalog records; detections do not verify a mineral at a waypoint.</li>
+            <li>DONKI: global solar-particle event context, not a Mars surface-dose measurement.</li>
+            <li>Dust-storm data and shelter locations are unavailable in the loaded layers.</li>
+          </ul>
+          <p>Route, oxygen, and risk values are simulated planning estimates, not live telemetry.</p>
+        </section>
+
+        <h3>Suit &amp; Communications</h3>
         <div class="tele">
           <div class="telemetry-grid">
             <div
               class="gauge"
               id="o2Gauge"
               role="img"
-              aria-label="Oxygen 100 percent"
+              aria-label="Estimated oxygen 100 percent"
             >
               <span class="gval" id="o2Value">100%</span>
-              <span class="glabel">Oxygen</span>
+              <span class="glabel">Estimated O₂</span>
             </div>
             <div
               class="gauge"
               id="signalGauge"
               role="img"
-              aria-label="Signal strong"
+              aria-label="Modelled signal strong"
             >
               <span class="gval" id="signalValue">Strong</span>
-              <span class="glabel">Signal</span>
+              <span class="glabel">Modelled signal</span>
             </div>
           </div>
-          <p id="o2Read">Estimated return reserve: 0 min</p>
-          <p id="sigRead">Base Camp direct link</p>
+          <p id="o2Read">Traverse-time estimate: 0 min</p>
+          <p id="sigRead">Configured link: Base Camp direct</p>
+          <p class="fn">Modelled planning values; not live suit or communications telemetry.</p>
         </div>
 
-        <h3>4. Selected Site</h3>
-        <section class="info" id="info" aria-live="polite"></section>
-
-        <h3>5. Mission Snapshot</h3>
+        <h3>Mission Snapshot</h3>
         <button class="big fun" id="snapBtn" type="button">
-          Generate mission snapshot
+          Generate and download snapshot
         </button>
-        <button class="big fun" id="marsBtn" type="button">
+        <button class="big fun" id="marsBtn" type="button" aria-pressed="false">
           Toggle surface audio
         </button>
       </aside>
@@ -436,6 +481,70 @@
           </div>
         </div>
       </div>
+      </div>
+
+      <nav class="bottom-nav" role="tablist" aria-label="Mission dashboard tabs">
+        <button
+          class="bottom-nav-tab"
+          id="tab-mission"
+          type="button"
+          role="tab"
+          aria-controls="deck-critical alertsDisclosure"
+          aria-selected="false"
+          data-tab="mission"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg>
+          <span>Mission</span>
+        </button>
+        <button
+          class="bottom-nav-tab"
+          id="tab-map"
+          type="button"
+          role="tab"
+          aria-controls="mapbox"
+          aria-selected="true"
+          data-tab="map"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"></path><path d="M9 3v15M15 6v15"></path></svg>
+          <span>Map</span>
+        </button>
+        <button
+          class="bottom-nav-tab"
+          id="tab-sites"
+          type="button"
+          role="tab"
+          aria-controls="mission-sidebar"
+          aria-selected="false"
+          data-tab="sites"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+          <span>Sites</span>
+        </button>
+        <button
+          class="bottom-nav-tab"
+          id="tab-route"
+          type="button"
+          role="tab"
+          aria-controls="profileChartContainer"
+          aria-selected="false"
+          data-tab="route"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l5-6 4 3 8-9"></path><path d="M15 6h5v5"></path></svg>
+          <span>Route</span>
+        </button>
+        <button
+          class="bottom-nav-tab"
+          id="tab-report"
+          type="button"
+          role="tab"
+          aria-controls="menu"
+          aria-selected="false"
+          data-tab="report"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path><path d="M15 3v5h5M9 12h7M9 16h7"></path></svg>
+          <span>Report</span>
+        </button>
+      </nav>
     </section>
 
     <div

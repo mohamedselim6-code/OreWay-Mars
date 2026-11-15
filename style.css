@@ -1987,7 +1987,7 @@ body.dayops .legend {
 
 .world .leaflet-tile-pane,
 .world .leaflet-image-layer {
-  filter: contrast(110%) brightness(85%) sepia(10%)
+  filter: grayscale(65%) contrast(108%) brightness(82%) saturate(.78)
 }
 
 .world.night .leaflet-tile-pane,
@@ -2341,7 +2341,7 @@ body.eva .work,
 body.dayops .work {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) 150px;
+  grid-template-rows: minmax(0, 1fr) auto 150px;
   gap: 0;
   height: 100%;
   min-height: 0;
@@ -3855,5 +3855,1281 @@ body.dayops .deck #walkBtn {
   body.dayops .deck {
     height: 270px;
     min-height: 270px
+  }
+}
+
+.sidebar-toggle {
+  display: none
+}
+
+@media (max-width: 767.98px) {
+  body.eva #app,
+  body.dayops #app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) 200px
+  }
+
+  #mission-sidebar {
+    position: absolute;
+    top: 0;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    width: min(320px, calc(100vw - 48px));
+    height: auto;
+    max-height: 100%;
+    padding: 3.5rem 1rem 1rem
+  }
+
+  #mission-sidebar.open {
+    display: flex
+  }
+
+  body.eva .hud,
+  body.dayops .hud {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: .35rem .5rem
+  }
+
+  .hud-lead {
+    grid-column: 1;
+    grid-row: 1;
+    padding-left: 2.8rem;
+    gap: .35rem
+  }
+
+  .hud-end {
+    grid-column: 2;
+    grid-row: 1;
+    gap: .25rem
+  }
+
+  .hud-title,
+  .hud-coords {
+    display: none
+  }
+
+  #mission-heading {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: .95rem
+  }
+
+  body.eva .hud .hb,
+  body.dayops .hud .hb {
+    padding-right: .45rem;
+    padding-left: .45rem;
+    font-size: .75rem
+  }
+
+  .sidebar-toggle {
+    position: absolute;
+    top: .4rem;
+    left: .5rem;
+    z-index: 1001;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    min-height: 36px;
+    padding: 0;
+    font-size: 1.15rem
+  }
+
+  body.eva .work,
+  body.dayops .work {
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto minmax(110px, 140px);
+    width: 100%;
+    min-width: 0
+  }
+
+  body.eva .mapbox,
+  body.dayops .mapbox {
+    width: 100%;
+    min-width: 0
+  }
+
+  body.eva .deck,
+  body.dayops .deck {
+    grid-column: 1;
+    grid-row: 3;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    min-height: 180px;
+    max-height: 45dvh;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: stretch;
+    gap: .4rem;
+    padding: .45rem .55rem
+  }
+
+  body.eva .deck .sim,
+  body.dayops .deck .sim,
+  body.eva .deck-critical,
+  body.dayops .deck-critical {
+    flex: 1 1 100%;
+    min-width: 0
+  }
+
+  body.eva .deck .sim,
+  body.dayops .deck .sim {
+    padding: .25rem .4rem
+  }
+
+  body.eva .deck-critical,
+  body.dayops .deck-critical {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: .25rem .5rem
+  }
+
+  body.eva .deck-critical .readout,
+  body.dayops .deck-critical .readout {
+    flex: 1 1 calc(50% - .5rem);
+    min-width: 0;
+    font-size: .78rem;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere
+  }
+
+  body.eva .deck-critical .readout[title^="Autonomous"],
+  body.dayops .deck-critical .readout[title^="Autonomous"] {
+    flex-basis: 100%
+  }
+
+  body.eva .deck-critical .sos-note,
+  body.dayops .deck-critical .sos-note {
+    flex: 1 1 100%
+  }
+
+  body.eva .deck-critical #sosBtn,
+  body.dayops .deck-critical #sosBtn {
+    margin-left: auto
+  }
+
+  #profileChartContainer {
+    width: 100%;
+    min-width: 0;
+    height: min(140px, 22vh);
+    min-height: 110px
+  }
+}
+
+.map-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .35rem;
+  min-width: 0
+}
+
+.map-disclosure {
+  min-width: 0;
+  align-self: start;
+  overflow: hidden;
+  background: #131B2E;
+  border: 1px solid #334155;
+  color: #F8FAFC
+}
+
+.map-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem;
+  min-height: 44px;
+  padding: .35rem .55rem;
+  cursor: pointer;
+  font: 600 .78rem/1.25 var(--body);
+  list-style: none
+}
+
+.map-disclosure > summary::-webkit-details-marker {
+  display: none
+}
+
+.map-disclosure > summary::after {
+  content: "+";
+  flex: none;
+  color: #7DD3FC;
+  font-size: 1rem
+}
+
+.map-disclosure[open] > summary::after {
+  content: "-"
+}
+
+.map-disclosure > summary:focus-visible {
+  outline: 2px solid #38BDF8;
+  outline-offset: -2px
+}
+
+.map-disclosure > .system-alerts,
+.map-disclosure > .legend {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  width: auto;
+  max-width: none;
+  max-height: 150px;
+  margin: 0;
+  overflow: auto;
+  padding: .55rem .65rem;
+  background: #0B0F19;
+  border: 0;
+  border-top: 1px solid #334155;
+  border-radius: 0;
+  color: #E2E8F0
+}
+
+.map-disclosure > .system-alerts p {
+  line-height: 1.4;
+  overflow-wrap: anywhere
+}
+
+.map-disclosure > .system-alerts .system-alert-item {
+  padding: .45rem;
+  border-left: 3px solid #EF4444;
+  background: #541818;
+  color: #FEE2E2
+}
+
+.map-disclosure > .legend {
+  font-size: .75rem
+}
+
+#legend {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  width: auto;
+  max-width: none;
+  max-height: 150px;
+  margin: 0;
+  overflow: auto;
+  padding: .55rem .65rem;
+  background: #0B0F19;
+  border: 0;
+  border-top: 1px solid #334155;
+  border-radius: 0
+}
+
+.map-disclosure > .legend h4 {
+  margin: 0 0 .3rem;
+  color: #F8FAFC;
+  font: 600 .8rem/1.35 var(--body)
+}
+
+.map-disclosure > .legend p {
+  margin: .2rem 0;
+  overflow-wrap: anywhere
+}
+
+.map-disclosure > .legend a {
+  color: #7DD3FC
+}
+
+#mission-sidebar .info {
+  max-height: none;
+  overflow: visible;
+  padding: .75rem 0 0;
+  background: transparent;
+  border: 0
+}
+
+#mission-sidebar .info > h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35
+}
+
+#mission-sidebar .info .tagline {
+  margin-bottom: .6rem
+}
+
+#mission-sidebar .info .mrow {
+  grid-template-columns: minmax(0, 8rem) minmax(2rem, 1fr) 2.5rem;
+  gap: .4rem;
+  font-size: .82rem
+}
+
+#mission-sidebar > .layer-status.dust-status {
+  display: block;
+  margin: 0 0 .65rem;
+  color: #B8B8B8;
+  font-size: .76rem;
+  line-height: 1.45
+}
+
+body.eva .deck > #banner,
+body.dayops .deck > #banner {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  flex: 1 1 100%;
+  width: auto;
+  min-height: 0;
+  padding: .25rem .45rem;
+  border-bottom: 1px solid var(--console-line);
+  font: 500 .75rem/1.3 var(--font)
+}
+
+body.eva .deck .sim,
+body.dayops .deck .sim {
+  grid-column: 1;
+  grid-row: 2
+}
+
+body.eva .deck-critical,
+body.dayops .deck-critical {
+  grid-column: 2;
+  grid-row: 2
+}
+
+@media (max-width: 767.98px) {
+  body.eva .hb,
+  body.dayops .hb,
+  body.eva .wp,
+  body.dayops .wp,
+  body.eva .sos,
+  body.dayops .sos {
+    min-height: 44px
+  }
+
+  body.eva .hud .hb,
+  body.dayops .hud .hb {
+    min-height: 44px
+  }
+
+  #sidebarToggle {
+    width: 44px;
+    min-height: 44px
+  }
+
+  #mission-sidebar .sw {
+    min-height: 44px
+  }
+
+  body.eva #slider,
+  body.dayops #slider {
+    min-height: 44px;
+    height: 44px
+  }
+
+  body.eva .world .leaflet-bar a,
+  body.eva .world .leaflet-bar a:hover,
+  body.dayops .world .leaflet-bar a,
+  body.dayops .world .leaflet-bar a:hover {
+    width: 44px;
+    height: 44px;
+    line-height: 42px
+  }
+
+  #leafletMap .gis-waypoint-icon::after,
+  #leafletMap .gis-astronaut-icon::after {
+    position: absolute;
+    inset: -9px;
+    content: ""
+  }
+
+  body.eva .work,
+  body.dayops .work {
+    grid-template-rows: minmax(0, 1fr) auto minmax(110px, 140px)
+  }
+
+  body.eva .deck,
+  body.dayops .deck {
+    height: 200px;
+    min-height: 180px;
+    max-height: 45dvh
+  }
+
+  body.eva .deck .sim,
+  body.dayops .deck .sim {
+    order: 1
+  }
+
+  body.eva .deck > #banner,
+  body.dayops .deck > #banner {
+    order: 2
+  }
+
+  body.eva .deck-critical,
+  body.dayops .deck-critical {
+    order: 3
+  }
+
+  body.eva .deck-critical .readout,
+  body.dayops .deck-critical .readout {
+    flex-basis: calc(50% - .5rem);
+    font-size: .78rem
+  }
+
+  body.eva .deck-critical .readout[title^="Autonomous"],
+  body.dayops .deck-critical .readout[title^="Autonomous"] {
+    flex-basis: 100%
+  }
+
+  .map-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .3rem
+  }
+
+  #profileChartContainer {
+    width: 100%;
+    min-width: 0
+  }
+}
+
+@media (min-width: 768px) and (max-width: 900px) {
+  body.eva .deck > #banner,
+  body.dayops .deck > #banner,
+  body.eva .deck .sim,
+  body.dayops .deck .sim,
+  body.eva .deck-critical,
+  body.dayops .deck-critical {
+    grid-column: 1;
+    grid-row: auto
+  }
+}
+
+/* Preserve the desktop dashboard flow while allowing mobile tab panels. */
+.dashboard-flow,
+.mission-site-controls,
+.mission-route-controls,
+.audio-report-control,
+.layer-controls,
+.selected-site-panel {
+  display: contents
+}
+
+.layer-sheet {
+  display: contents
+}
+
+.layer-sheet > summary {
+  display: none
+}
+
+.layer-controls > .sw {
+  display: flex;
+  min-height: 44px;
+  margin: 0 0 12px;
+  padding: 16px;
+  background: #1E1E1E;
+  border: 1px solid #333333;
+  border-radius: 8px
+}
+
+.layer-controls > .layer-status {
+  display: block;
+  margin: 0 0 .65rem;
+  color: #B8B8B8;
+  font-size: .76rem;
+  line-height: 1.45
+}
+
+.mission-status-chip,
+.report-notes {
+  display: none
+}
+
+.bottom-nav {
+  display: none
+}
+
+@media (max-width: 767.98px) {
+  body.eva,
+  body.dayops {
+    overflow: hidden
+  }
+
+  body.eva #app,
+  body.dayops #app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto calc(56px + env(safe-area-inset-bottom, 0px));
+    height: 100dvh;
+    padding: env(safe-area-inset-top, 0px) 0 0;
+    overflow: hidden;
+    background: #0B0F19;
+    contain: paint;
+    isolation: isolate
+  }
+
+  .dashboard-flow {
+    display: contents
+  }
+
+  body.eva .hud,
+  body.dayops .hud {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    gap: .15rem .45rem;
+    min-height: 0;
+    height: auto;
+    padding: .4rem .55rem;
+    border-bottom: 1px solid #334155
+  }
+
+  .hud-lead {
+    display: none
+  }
+
+  #mission-heading {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    font-size: .97rem;
+    line-height: 1.25;
+    text-align: left;
+    white-space: normal
+  }
+
+  .hud-end {
+    display: contents
+  }
+
+  .hud-coords {
+    display: block;
+    grid-column: 1;
+    grid-row: 2;
+    font-size: .75rem;
+    line-height: 1.3;
+    white-space: normal
+  }
+
+  .mission-status-chip {
+    display: inline-flex;
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: .2rem .5rem;
+    border: 1px solid #475569;
+    border-radius: 999px;
+    color: #BAE6FD;
+    font: 600 .68rem/1.2 var(--body);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap
+  }
+
+  body.eva .hud #overviewBtn,
+  body.dayops .hud #overviewBtn {
+    grid-column: 1;
+    grid-row: 3
+  }
+
+  body.eva .hud #modeBtn,
+  body.dayops .hud #modeBtn {
+    grid-column: 2;
+    grid-row: 3
+  }
+
+  body.eva .hud .hb,
+  body.dayops .hud .hb {
+    min-height: 44px;
+    width: 100%;
+    padding: .35rem .5rem;
+    font-size: .78rem
+  }
+
+  #sidebarToggle,
+  #menuBtn {
+    display: none !important
+  }
+
+  body.eva #banner,
+  body.dayops #banner {
+    position: static;
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    padding: .45rem .65rem;
+    border-bottom: 1px solid #334155;
+    font: 600 .78rem/1.35 var(--body);
+    overflow-wrap: anywhere
+  }
+
+  body.eva .deck > #banner,
+  body.dayops .deck > #banner {
+    grid-column: 1;
+    grid-row: 2
+  }
+
+  body.eva .alertbar.warn,
+  body.dayops .alertbar.warn {
+    background: #713F12;
+    color: #FEF3C7;
+    border-color: #F59E0B
+  }
+
+  body.eva .alertbar.alert,
+  body.dayops .alertbar.alert {
+    background: #7F1D1D;
+    color: #FEF2F2;
+    border-color: #EF4444
+  }
+
+  body.eva .alertbar.ok,
+  body.dayops .alertbar.ok,
+  body.eva .alertbar.weak,
+  body.dayops .alertbar.weak,
+  body.eva .alertbar.target,
+  body.dayops .alertbar.target {
+    background: #172033;
+    color: #E2E8F0
+  }
+
+  body.eva .work,
+  body.dayops .work {
+    position: relative;
+    grid-column: 1;
+    grid-row: 3 / 5;
+    display: none;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    gap: 0;
+    padding: 0
+  }
+
+  body.eva .deck,
+  body.dayops .deck {
+    display: contents
+  }
+
+  body.eva .deck .sim,
+  body.dayops .deck .sim,
+  body.eva .deck-critical,
+  body.dayops .deck-critical {
+    display: none
+  }
+
+  #mission-sidebar {
+    z-index: 40;
+    display: none;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    padding: .75rem;
+    overflow: auto;
+    background: #131B2E;
+    border: 0;
+    color: #F8FAFC
+  }
+
+  #mission-sidebar .mission-sidebar-header {
+    display: block;
+    flex: none;
+    padding-bottom: .6rem
+  }
+
+  #mission-sidebar .mission-sidebar-header h2 {
+    font-size: .9rem
+  }
+
+  #mission-sidebar .mission-site-controls,
+  #mission-sidebar .mission-route-controls,
+  #mission-sidebar .selected-site-panel {
+    display: block
+  }
+
+  #mission-sidebar .mission-site-controls {
+    flex: none
+  }
+
+  #mission-sidebar .audio-report-control,
+  #mission-sidebar .layer-sheet {
+    display: none
+  }
+
+  #mission-sidebar .selected-site-panel {
+    padding-top: .5rem
+  }
+
+  #mission-sidebar h3 {
+    margin: .75rem 0 .5rem;
+    font-size: .78rem
+  }
+
+  #mission-sidebar .wps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .35rem;
+    margin-top: .5rem
+  }
+
+  #mission-sidebar .wp,
+  #mission-sidebar .sw,
+  #mission-sidebar .big {
+    min-height: 44px
+  }
+
+  #mission-sidebar .walk-hint {
+    display: block;
+    margin: .5rem 0;
+    line-height: 1.4
+  }
+
+  #mission-sidebar .info {
+    max-height: none;
+    overflow: visible
+  }
+
+  #mission-sidebar .info .mrow {
+    grid-template-columns: minmax(0, 7rem) minmax(2rem, 1fr) 2.4rem
+  }
+
+  #mission-sidebar .layer-controls {
+    display: block
+  }
+
+  #mission-sidebar .layer-controls > .sw {
+    display: flex;
+    min-height: 52px;
+    margin: .35rem 0;
+    padding: .55rem .65rem;
+    border-radius: 6px
+  }
+
+  #mission-sidebar .layer-controls > .layer-status {
+    margin: .35rem .25rem .55rem;
+    line-height: 1.4
+  }
+
+  #layerSheet > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: .55rem .75rem;
+    background: #131B2E;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    color: #F8FAFC;
+    font: 600 .78rem/1.2 var(--body);
+    list-style: none;
+    cursor: pointer
+  }
+
+  #layerSheet > summary::-webkit-details-marker {
+    display: none
+  }
+
+  #layerSheet[open] {
+    display: block;
+    max-height: min(58dvh, 440px);
+    overflow: auto;
+    padding: .5rem;
+    background: #131B2E;
+    border: 1px solid #475569;
+    border-radius: 10px
+  }
+
+  #layerSheet[open] > summary {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: -.5rem -.5rem .5rem;
+    border-radius: 9px 9px 0 0
+  }
+
+  #app[data-active-tab="map"] .work {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr)
+  }
+
+  #app[data-active-tab="map"] .mapbox {
+    position: relative;
+    grid-row: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0
+  }
+
+  #app[data-active-tab="map"] .world {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-width: none;
+    aspect-ratio: auto
+  }
+
+  #app[data-active-tab="map"] .map-tools {
+    display: contents
+  }
+
+  #app[data-active-tab="map"] #legendDisclosure {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    z-index: 15;
+    width: min(190px, calc(100% - 128px));
+    max-height: 48px;
+    background: rgba(15, 23, 42, .94);
+    border: 1px solid #64748B;
+    border-radius: 6px;
+    color: #F8FAFC
+  }
+
+  #app[data-active-tab="map"] #legendDisclosure[open] {
+    max-height: min(42dvh, 260px)
+  }
+
+  #app:has(#layerSheet[open]) #legendDisclosure {
+    display: none
+  }
+
+  #app[data-active-tab="map"] #legendDisclosure > .legend {
+    max-height: min(34dvh, 210px);
+    background: rgba(11, 15, 25, .94)
+  }
+
+  #app[data-active-tab="map"] #legend p:not(:has(i)) {
+    display: none
+  }
+
+  #app[data-active-tab="map"] #alertsDisclosure,
+  #app[data-active-tab="map"] #profileChartContainer {
+    display: none
+  }
+
+  #app[data-active-tab="map"] #mission-sidebar {
+    position: fixed;
+    top: auto;
+    right: 8px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+    left: auto;
+    display: block;
+    width: 112px;
+    max-height: min(58dvh, 440px);
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    pointer-events: auto
+  }
+
+  #app[data-active-tab="map"] #mission-sidebar .mission-sidebar-header,
+  #app[data-active-tab="map"] #mission-sidebar .mission-site-controls,
+  #app[data-active-tab="map"] #mission-sidebar .selected-site-panel {
+    display: none
+  }
+
+  #app[data-active-tab="map"] #mission-sidebar .layer-sheet {
+    display: block
+  }
+
+  #app[data-active-tab="map"] #layerSheet[open] {
+    position: fixed;
+    right: 8px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+    z-index: 45;
+    width: min(320px, calc(100vw - 16px))
+  }
+
+  #app[data-active-tab="sites"] #mission-sidebar {
+    position: relative;
+    grid-column: 1;
+    grid-row: 3 / 5;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto
+  }
+
+  #app[data-active-tab="sites"] .work,
+  #app[data-active-tab="sites"] #menu {
+    display: none
+  }
+
+  #app[data-active-tab="mission"] .work {
+    display: contents
+  }
+
+  #app[data-active-tab="mission"] .mapbox,
+  #app[data-active-tab="mission"] #legendDisclosure,
+  #app[data-active-tab="mission"] #profileChartContainer {
+    display: none
+  }
+
+  #app[data-active-tab="mission"] .map-tools {
+    display: contents
+  }
+
+  #app[data-active-tab="mission"] #alertsDisclosure {
+    grid-column: 1;
+    grid-row: 4;
+    display: block;
+    width: 100%;
+    max-height: min(30dvh, 220px);
+    overflow: auto;
+    background: #131B2E;
+    border-color: #334155;
+    border-radius: 0
+  }
+
+  #app[data-active-tab="mission"] #deck-critical {
+    grid-column: 1;
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: .45rem;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: .65rem;
+    overflow: auto;
+    background: #0B0F19;
+    border: 0
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .readout {
+    min-width: 0;
+    margin: 0;
+    padding: .7rem;
+    background: #131B2E;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    font-size: .85rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .readout small {
+    display: block;
+    margin-top: .3rem;
+    color: #94A3B8;
+    font-size: .67rem
+  }
+
+  #app[data-active-tab="mission"] .deck-critical #deckO2,
+  #app[data-active-tab="mission"] .deck-critical .risk-readout,
+  #app[data-active-tab="mission"] .deck-critical .readout[title^="Autonomous"] {
+    grid-row: auto;
+    grid-column: auto
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .readout[title^="Autonomous"],
+  #app[data-active-tab="mission"] .deck-critical #nextWaypoint,
+  #app[data-active-tab="mission"] .deck-critical .sos-note {
+    grid-column: 1 / -1
+  }
+
+  #app[data-active-tab="mission"] .deck-critical .sos-note {
+    margin: 0;
+    line-height: 1.35
+  }
+
+  #app[data-active-tab="mission"] .deck-critical #sosBtn {
+    grid-column: 2;
+    grid-row: 4;
+    justify-self: stretch;
+    min-height: 44px;
+    margin: 0
+  }
+
+  #app[data-active-tab="mission"] #mission-sidebar,
+  #app[data-active-tab="mission"] #menu {
+    display: none
+  }
+
+  #app[data-active-tab="route"] .work {
+    display: contents
+  }
+
+  #app[data-active-tab="route"] .mapbox,
+  #app[data-active-tab="route"] .map-tools {
+    display: none
+  }
+
+  #app[data-active-tab="route"] #profileChartContainer {
+    grid-column: 1;
+    grid-row: 3;
+    display: block;
+    width: 100%;
+    height: min(50dvh, 500px);
+    min-height: 200px;
+    padding: .5rem;
+    background: #0B0F19;
+    border: 1px solid #334155
+  }
+
+  #app[data-active-tab="route"] .deck .sim {
+    grid-column: 1;
+    grid-row: 4;
+    display: block;
+    min-width: 0;
+    padding: .55rem .7rem;
+    background: #131B2E;
+    border-top: 1px solid #334155
+  }
+
+  #app[data-active-tab="route"] .deck .simh {
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    flex-wrap: wrap;
+    font-size: .78rem
+  }
+
+  #app[data-active-tab="route"] #mission-sidebar,
+  #app[data-active-tab="route"] #menu,
+  #app[data-active-tab="route"] #deck-critical {
+    display: none
+  }
+
+  #app[data-active-tab="report"] #mission-sidebar {
+    display: contents
+  }
+
+  #app[data-active-tab="report"] #mission-sidebar .mission-sidebar-header,
+  #app[data-active-tab="report"] #mission-sidebar .mission-route-controls,
+  #app[data-active-tab="report"] #mission-sidebar .layer-sheet,
+  #app[data-active-tab="report"] #mission-sidebar .selected-site-panel {
+    display: none
+  }
+
+  #app[data-active-tab="report"] #mission-sidebar .mission-site-controls,
+  #app[data-active-tab="report"] #mission-sidebar .audio-report-control {
+    display: contents
+  }
+
+  #app[data-active-tab="report"] #audioSw {
+    grid-column: 1;
+    grid-row: 4;
+    display: flex;
+    width: 100%;
+    min-height: 52px;
+    margin: 0;
+    padding: .6rem .75rem;
+    background: #131B2E;
+    border: 1px solid #334155;
+    border-radius: 6px
+  }
+
+  #app[data-active-tab="report"] .work,
+  #app[data-active-tab="report"] .deck-critical,
+  #app[data-active-tab="report"] .deck .sim {
+    display: none
+  }
+
+  #app[data-active-tab="report"] #menu {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: 1;
+    grid-column: 1;
+    grid-row: 3;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: .8rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+    background: #0B0F19;
+    border: 0;
+    color: #E2E8F0
+  }
+
+  #app[data-active-tab="report"] #menu .top {
+    display: none
+  }
+
+  #app[data-active-tab="report"] #menu h3 {
+    margin: .9rem 0 .5rem;
+    font-size: .9rem
+  }
+
+  #app[data-active-tab="report"] .report-notes {
+    display: block;
+    margin: 0 0 .8rem;
+    padding: .75rem;
+    background: #131B2E;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    font-size: .78rem;
+    line-height: 1.5
+  }
+
+  #app[data-active-tab="report"] .report-notes h3 {
+    margin: 0 0 .45rem
+  }
+
+  #app[data-active-tab="report"] .report-notes ul {
+    margin: 0;
+    padding-left: 1.1rem
+  }
+
+  #app[data-active-tab="report"] .report-notes li {
+    margin: .3rem 0
+  }
+
+  #app[data-active-tab="report"] .report-notes p {
+    margin: .55rem 0 0;
+    color: #BAE6FD
+  }
+
+  #app[data-active-tab="report"] #closeMenu {
+    display: none
+  }
+
+  #app[data-active-tab="report"] .bottom-nav-tab[aria-selected="true"],
+  #app .bottom-nav-tab[aria-selected="true"] {
+    color: #7DD3FC
+  }
+
+  #app[data-active-tab="mission"] .bottom-nav-tab[aria-selected="true"],
+  #app[data-active-tab="map"] .bottom-nav-tab[aria-selected="true"],
+  #app[data-active-tab="sites"] .bottom-nav-tab[aria-selected="true"],
+  #app[data-active-tab="route"] .bottom-nav-tab[aria-selected="true"],
+  #app[data-active-tab="report"] .bottom-nav-tab[aria-selected="true"] {
+    background: #172033
+  }
+
+  #app[data-active-tab="mission"] #menu,
+  #app[data-active-tab="map"] #menu,
+  #app[data-active-tab="sites"] #menu,
+  #app[data-active-tab="route"] #menu {
+    display: none
+  }
+
+  #app[data-active-tab="mission"] #mission-sidebar,
+  #app[data-active-tab="route"] #mission-sidebar,
+  #app[data-active-tab="report"] #mission-sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: 0
+  }
+
+  #app[data-active-tab="mission"] .bottom-nav,
+  #app[data-active-tab="map"] .bottom-nav,
+  #app[data-active-tab="sites"] .bottom-nav,
+  #app[data-active-tab="route"] .bottom-nav,
+  #app[data-active-tab="report"] .bottom-nav {
+    grid-column: 1;
+    grid-row: 5;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+    min-height: 56px;
+    padding: 0 0 env(safe-area-inset-bottom, 0px);
+    background: #0B0F19;
+    border-top: 1px solid #334155
+  }
+
+  .bottom-nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 56px;
+    padding: .2rem .1rem;
+    background: transparent;
+    border: 0;
+    color: #CBD5E1;
+    font: 500 .64rem/1.1 var(--body);
+    cursor: pointer
+  }
+
+  .bottom-nav-tab:focus-visible {
+    outline: 2px solid #38BDF8;
+    outline-offset: -3px
+  }
+
+  .bottom-nav-tab svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round
+  }
+
+  #app > .snap {
+    z-index: 1500
+  }
+
+  #app > .scrim {
+    display: none
+  }
+
+  #profileChartContainer {
+    min-width: 0
+  }
+
+  #leafletMap .leaflet-control-container {
+    z-index: 5
+  }
+
+  body.eva .deck-critical .sos,
+  body.dayops .deck-critical .sos {
+    min-height: 44px
+  }
+
+  @media (max-width: 359px) {
+    .bottom-nav-tab {
+      font-size: .59rem
+    }
+
+    #app[data-active-tab="mission"] #deck-critical {
+      gap: .3rem;
+      padding: .45rem
+    }
+
+    #app[data-active-tab="mission"] .deck-critical .readout {
+      padding: .5rem;
+      font-size: .78rem
+    }
   }
 }
