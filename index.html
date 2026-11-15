@@ -231,6 +231,16 @@
               <span id="cursorLatLon">Cursor: --</span>
               <span class="north-arrow" aria-label="North">↑ <b>N</b></span>
             </div>
+            <section class="system-alerts" aria-labelledby="systemAlertsHeading" aria-live="assertive">
+              <h2 id="systemAlertsHeading">Active System Alerts</h2>
+              <p id="systemAlertsClear">No active alerts.</p>
+              <p id="hazardSystemAlert" class="system-alert-item" hidden>
+                CRITICAL WARNING: Approaching Hazard Zone (Dark Dunes). Reroute Recommended.
+              </p>
+              <p id="oxygenSystemAlert" class="system-alert-item" hidden>
+                WARNING: Oxygen levels low. Begin return to Base Camp.
+              </p>
+            </section>
             <div class="legend" id="legend" aria-label="Map legend"></div>
           </div>
           <div id="banner" class="alertbar ok" role="status" aria-live="polite">
@@ -269,6 +279,7 @@
               Simulate Walk
             </button>
           </div>
+          <small class="walk-hint">Click to start mission simulation and trigger hazard alerts.</small>
         </div>
         <div class="deck-critical">
           <p class="readout" id="deckO2">Suit O2: 100%</p>

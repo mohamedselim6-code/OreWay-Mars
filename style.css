@@ -1,9 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap");
-
 /* === 1. VARIABLES & RESET === */
 :root {
   color-scheme: dark;
-  --bg: #121212;
+  --bg: #0a0a0a;
   --panel: #1E1E24;
   --panel-raised: #29292F;
   --line: #333333;
@@ -16,9 +14,9 @@
   --go: var(--safe);
   --go-deep: #4E5F4D;
   --rust: #CC5500;
-  --display: "Rajdhani", "Segoe UI", Arial, sans-serif;
-  --body: "Rajdhani", "Segoe UI", Arial, sans-serif;
-  --numeric: "Roboto Mono", Consolas, monospace;
+  --display: "Segoe UI", Arial, sans-serif;
+  --body: "Segoe UI", Arial, sans-serif;
+  --numeric: "Segoe UI", Arial, sans-serif;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top,0px);
   padding-bottom: env(safe-area-inset-bottom,0px);
@@ -1989,7 +1987,7 @@ body.dayops .legend {
 
 .world .leaflet-tile-pane,
 .world .leaflet-image-layer {
-  filter: grayscale(60%) contrast(110%) brightness(80%)
+  filter: contrast(110%) brightness(85%) sepia(10%)
 }
 
 .world.night .leaflet-tile-pane,
@@ -2248,14 +2246,14 @@ body.dayops .world .leaflet-tooltip-top:before {
 /* === 7. Mission control console === */
 
 :root {
-  --console: #121212;
+  --console: #0a0a0a;
   --console-bar: #121212;
   --console-panel: #1E1E24;
   --console-line: #333333;
   --console-ink: #FFFFFF;
   --console-dim: #B8B8B8;
   --console-blue: #CC5500;
-  --font: "Rajdhani", "Segoe UI", Arial, sans-serif
+  --font: "Segoe UI", Arial, sans-serif
 }
 
 body {
@@ -2945,7 +2943,7 @@ body.eva,
 body.dayops,
 body.eva #app,
 body.dayops #app {
-  background: #121212;
+  background: #0a0a0a;
   color: #FFFFFF
 }
 
@@ -3307,4 +3305,190 @@ h6,
 .gis-waypoint-icon span,
 .gis-astronaut-icon span {
   font-family: var(--numeric)
+}
+
+/* === 10. Neutral typography and non-glowing display === */
+
+h1 {
+  background: none;
+  color: #FFFFFF;
+  filter: none
+}
+
+.reticle svg,
+.go-wrap,
+.go,
+#routeD {
+  filter: none
+}
+
+.go {
+  animation: none
+}
+
+/* === 11. Mission Control layer cards === */
+
+#menu > .sw[data-l="mola"],
+#menu > .sw[data-l="thermal"],
+#menu > .sw[data-l="crism"],
+#menu > .sw[data-l="radiation"],
+#menu > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
+  margin: 0 0 12px;
+  padding: 16px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px
+}
+
+#menu > .sw[data-l="mola"],
+#menu > .sw[data-l="thermal"],
+#menu > .sw[data-l="crism"],
+#menu > .sw[data-l="radiation"] {
+  display: flex;
+  min-height: 0
+}
+
+#menu > .layer-status[title="Martian dust storms can reduce visibility and block solar arrays. Monitor NASA MARCI/MCS data."] {
+  display: block;
+  line-height: 1.45
+}
+
+/* === 12. NASA blue actions and mobile navigation === */
+
+#start,
+#autoBtn,
+#walkBtn,
+#guideBtn,
+.briefing-init,
+body.eva .big.home,
+body.dayops .big.home,
+body.eva .briefing-init,
+body.dayops .briefing-init {
+  background: #0B3D91;
+  border-color: #0B3D91;
+  color: #FFFFFF;
+  box-shadow: none;
+  text-shadow: none
+}
+
+#start:hover,
+#autoBtn:hover,
+#walkBtn:hover,
+#guideBtn:hover,
+.briefing-init:hover,
+body.eva .big.home:hover,
+body.dayops .big.home:hover,
+body.eva .briefing-init:hover,
+body.dayops .briefing-init:hover {
+  background: #082F70
+}
+
+#menu .sw[aria-checked="true"] .knob {
+  background: #0B3D91
+}
+
+#menu .sw[aria-checked="true"] .knob::after {
+  background: #FFFFFF
+}
+
+#menu .sw[aria-checked="true"] .st {
+  color: #0B3D91
+}
+
+.wps,
+body.eva .wps,
+body.dayops .wps {
+  gap: 8px;
+  padding: 8px;
+  background: #121212;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  box-shadow: none;
+  text-shadow: none
+}
+
+.wps .wp {
+  min-height: 44px;
+  border: 1px solid #333333;
+  border-radius: 6px;
+  background: #1E1E24;
+  color: #FFFFFF;
+  box-shadow: none;
+  text-shadow: none
+}
+
+.wps .wp:hover {
+  background: #29292F
+}
+
+.wps .wp.sel,
+#walkBtn,
+#autoBtn {
+  background: #0B3D91;
+  border-color: #0B3D91;
+  color: #FFFFFF
+}
+
+.wps .wp.sel:hover,
+#walkBtn:hover,
+#autoBtn:hover {
+  background: #082F70
+}
+
+#sosBtn {
+  background: #A32020;
+  border: 1px solid #7A1E1E;
+  color: #FFFFFF;
+  box-shadow: none;
+  text-shadow: none
+}
+
+#sosBtn:hover {
+  background: #8E1B1B
+}
+
+#sosBtn:active,
+#sosBtn[aria-pressed="true"] {
+  background: #751616
+}
+
+/* === 13. Waypoint colors and astronaut scan radius === */
+
+#leafletMap .gis-waypoint-icon span[aria-label^="Site 1:"] {
+  background: #2E7D32;
+  border-color: #2E7D32;
+  color: #FFFFFF
+}
+
+#leafletMap .gis-waypoint-icon span[aria-label^="Site 2:"] {
+  background: #F9A825;
+  border-color: #F9A825;
+  color: #121212
+}
+
+#leafletMap .gis-waypoint-icon span[aria-label^="Site 3:"] {
+  background: #C62828;
+  border-color: #C62828;
+  color: #FFFFFF
+}
+
+.gis-astronaut-icon span {
+  position: relative;
+  z-index: 0;
+  isolation: isolate
+}
+
+.gis-astronaut-icon span::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 76px;
+  height: 76px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(16, 185, 129, .75);
+  border-radius: 50%;
+  background: rgba(16, 185, 129, .18);
+  pointer-events: none
 }
