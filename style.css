@@ -2189,3 +2189,640 @@ body.dayops .world .leaflet-tooltip-top:before {
     margin-bottom: 34px
   }
 }
+
+/* === 7. Mission control console === */
+
+:root {
+  --console: #0C1218;
+  --console-bar: #101820;
+  --console-panel: #151C26;
+  --console-line: #2C3A4A;
+  --console-ink: #F4F7FB;
+  --console-dim: #C5D0DC;
+  --console-blue: #1E4E86;
+  --font: "Roboto", "Segoe UI", Arial, sans-serif
+}
+
+body {
+  background: var(--console);
+  color: var(--console-ink);
+  font-family: var(--font);
+  line-height: 1.45
+}
+
+.bar {
+  background: var(--console-bar);
+  border-bottom: 1px solid var(--console-line);
+  backdrop-filter: none
+}
+
+.cell,
+.cell b,
+h1,
+.sub,
+.hud h2,
+.hud h2 span,
+.hb,
+.wp,
+.sw,
+.sw .t b,
+.sw .t small,
+.menu h3,
+.menu .top b,
+.info h3,
+.simh,
+.simh b,
+.tele p,
+.legend,
+.legend h4,
+.briefing-panel,
+.briefing-panel h2,
+.briefing-rules h3,
+.briefing-rules p,
+.briefing-init {
+  font-family: var(--font);
+  text-shadow: none
+}
+
+h1,
+.cell .ok,
+.simh span b,
+.go,
+.led,
+.reticle svg,
+.tag,
+#routeD {
+  filter: none;
+  text-shadow: none;
+  box-shadow: none
+}
+
+.led {
+  animation: none;
+  background: #3F8F6B
+}
+
+.go,
+.briefing-init,
+.big.home {
+  background: var(--console-blue);
+  border: 1px solid #2C639F;
+  border-radius: 2px;
+  box-shadow: none;
+  animation: none;
+  color: #fff;
+  letter-spacing: .01em
+}
+
+body.eva #app,
+body.dayops #app {
+  display: grid;
+  grid-template-rows: minmax(48px, 8%) minmax(0, 80%) minmax(0, 12%);
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--console);
+  color: var(--console-ink)
+}
+
+body.eva .work,
+body.dayops .work {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  max-height: none
+}
+
+body.eva .mapbox,
+body.dayops .mapbox {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #0A0F14
+}
+
+body.eva .world,
+body.dayops .world {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  aspect-ratio: auto;
+  border-color: var(--console-line);
+  box-shadow: none
+}
+
+body.eva .hud,
+body.dayops .hud {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: center;
+  gap: .75rem;
+  min-height: 0;
+  height: 100%;
+  padding: 0 .9rem;
+  background: var(--console-bar);
+  color: var(--console-ink);
+  border-bottom: 1px solid var(--console-line)
+}
+
+.hud-lead,
+.hud-end {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-width: 0
+}
+
+.hud-end {
+  justify-content: flex-end
+}
+
+.hud-title,
+.hud-coords,
+#mission-heading {
+  margin: 0;
+  color: var(--console-ink);
+  font: 600 .98rem/1.2 var(--font);
+  letter-spacing: 0;
+  white-space: nowrap
+}
+
+#mission-heading {
+  text-align: center;
+  font-size: 1.05rem
+}
+
+.hud-title {
+  color: var(--console-dim);
+  font-weight: 500
+}
+
+.hud-coords {
+  font-variant-numeric: tabular-nums
+}
+
+body.eva .hb,
+body.dayops .hb,
+body.eva .wp,
+body.dayops .wp {
+  min-height: 32px;
+  min-width: 0;
+  padding: 0 .7rem;
+  border: 1px solid var(--console-line);
+  border-radius: 2px;
+  background: #1A2330;
+  color: var(--console-ink);
+  font: 500 .82rem/1.2 var(--font);
+  letter-spacing: 0
+}
+
+body.eva .hb:hover,
+body.dayops .hb:hover,
+body.eva .wp:hover,
+body.dayops .wp:hover {
+  background: #243140
+}
+
+body.eva .alertbar,
+body.dayops .alertbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  min-height: 32px;
+  padding: .35rem .8rem;
+  background: #172033;
+  color: var(--console-ink);
+  border: 0;
+  border-bottom: 1px solid var(--console-line);
+  font: 500 .82rem/1.35 var(--font)
+}
+
+body.eva .alertbar.ok,
+body.dayops .alertbar.ok,
+body.eva .alertbar.warn,
+body.dayops .alertbar.warn,
+body.eva .alertbar.weak,
+body.dayops .alertbar.weak,
+body.eva .alertbar.target,
+body.dayops .alertbar.target,
+body.eva .alertbar.alert,
+body.dayops .alertbar.alert {
+  background: #172033;
+  color: var(--console-ink);
+  border-color: var(--console-line);
+  animation: none
+}
+
+body.eva .alertbar.alert,
+body.dayops .alertbar.alert {
+  background: #6F1D1D;
+  color: #fff
+}
+
+body.eva .deck,
+body.dayops .deck {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(280px, 1.15fr);
+  align-items: center;
+  gap: .8rem;
+  min-height: 0;
+  overflow: auto;
+  padding: .55rem .75rem;
+  background: var(--console-panel);
+  color: var(--console-ink);
+  border-top: 1px solid var(--console-line)
+}
+
+body.eva .deck .sim,
+body.dayops .deck .sim {
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0
+}
+
+body.eva .simh,
+body.dayops .simh {
+  color: var(--console-dim);
+  font-size: .78rem
+}
+
+body.eva .simh b,
+body.dayops .simh b,
+body.eva .simh span b,
+body.dayops .simh span b {
+  color: var(--console-ink);
+  font-weight: 600
+}
+
+body.eva #slider,
+body.dayops #slider {
+  height: 28px
+}
+
+.deck-critical {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .9rem 1.25rem;
+  min-width: 0
+}
+
+.readout,
+.sos-note {
+  margin: 0;
+  color: var(--console-ink);
+  font: 600 .95rem/1.3 var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap
+}
+
+.sos-note:empty {
+  display: none
+}
+
+.sos {
+  flex: none;
+  min-width: 76px;
+  min-height: 44px;
+  margin-left: .25rem;
+  padding: 0 .9rem;
+  border: 1px solid #7A1E1E;
+  border-radius: 2px;
+  background: #A32020;
+  color: #fff;
+  cursor: pointer;
+  font: 700 .95rem/1 var(--font);
+  letter-spacing: .06em
+}
+
+.sos:hover {
+  background: #8E1B1B
+}
+
+.sos:active {
+  background: #751616
+}
+
+.sos[aria-pressed="true"] {
+  background: #6E1414;
+  border-color: #F2F5F8
+}
+
+.sos:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px
+}
+
+body.eva .menu,
+body.dayops .menu,
+body.dayops .side,
+body.dayops .info,
+body.dayops .hud,
+body.dayops .sim {
+  background: var(--console-panel);
+  color: var(--console-ink);
+  border-color: var(--console-line)
+}
+
+body.eva .menu .info,
+body.dayops .menu .info {
+  max-height: none;
+  padding: 0 0 .4rem;
+  overflow: visible;
+  background: transparent;
+  border: 0
+}
+
+body.dayops .hb,
+body.dayops .wp,
+body.dayops .sw,
+body.dayops .cp,
+body.dayops .tele,
+body.dayops .snap .card {
+  background: #1A2330;
+  color: var(--console-ink);
+  border-color: var(--console-line)
+}
+
+body.dayops .mapbox,
+body.dayops #leafletMap {
+  background: #0A0F14
+}
+
+body.dayops .hud h2,
+body.dayops .info h3,
+body.dayops .menu .top b,
+body.dayops .simh b,
+body.dayops .gval {
+  color: var(--console-ink)
+}
+
+body.dayops .hud h2 span,
+body.dayops .sw .t small,
+body.dayops .cp small,
+body.dayops .fn,
+body.dayops .tele p,
+body.dayops .glabel {
+  color: var(--console-dim)
+}
+
+.briefing {
+  background: rgba(8, 12, 16, .94);
+  backdrop-filter: none
+}
+
+.briefing-panel {
+  background: #151C26;
+  border: 1px solid #314155;
+  border-radius: 2px;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: var(--console-ink)
+}
+
+.briefing-panel::before,
+.briefing-panel::after {
+  display: none
+}
+
+.briefing-status {
+  color: #B7C6D6;
+  letter-spacing: .08em
+}
+
+.system-online {
+  background: #3F8F6B;
+  box-shadow: none;
+  animation: none
+}
+
+.briefing-objective,
+.briefing-rules h3 {
+  color: #D5DEE8
+}
+
+.briefing-rules li {
+  background: #101820;
+  border-color: var(--console-line)
+}
+
+@media (max-width: 900px) {
+  body.eva #app,
+  body.dayops #app {
+    grid-template-rows: auto minmax(0, 80%) minmax(0, 1fr)
+  }
+
+  body.eva .hud,
+  body.dayops .hud {
+    height: auto;
+    grid-template-columns: 1fr auto;
+    padding: .45rem .6rem
+  }
+
+  #mission-heading {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left
+  }
+
+  .hud-end {
+    grid-column: 2;
+    grid-row: 1
+  }
+
+  body.eva .deck,
+  body.dayops .deck {
+    grid-template-columns: 1fr;
+    align-items: stretch
+  }
+
+  .deck-critical {
+    justify-content: flex-start;
+    flex-wrap: wrap
+  }
+
+  .sos {
+    margin-left: auto
+  }
+}
+
+/* === 6. Mission briefing === */
+
+body.briefing-open {
+  overflow: hidden
+}
+
+.briefing {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(2, 6, 16, .62);
+  backdrop-filter: blur(8px)
+}
+
+.briefing[hidden] {
+  display: none
+}
+
+.briefing-panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: min(92dvh, 880px);
+  overflow: auto;
+  padding: 1.35rem 1.4rem 1.25rem;
+  border: 2px solid #0B3D91;
+  border-radius: 8px;
+  background: rgba(8, 14, 28, .62);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px rgba(125, 184, 255, .8),
+    0 0 36px rgba(11, 61, 145, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+  backdrop-filter: blur(18px) saturate(1.25)
+}
+
+.briefing-panel::before,
+.briefing-panel::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  border: 2px solid #7EB6FF
+}
+
+.briefing-panel::before {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0
+}
+
+.briefing-panel::after {
+  right: 8px;
+  bottom: 8px;
+  border-left: 0;
+  border-top: 0
+}
+
+.briefing-status {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: 0 0 .85rem;
+  color: #6EE7B7;
+  font: 600 .78rem/1.3 var(--display);
+  letter-spacing: .14em;
+  text-transform: uppercase
+}
+
+.system-online {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  animation: system-online-blink 1.05s steps(2, end) infinite
+}
+
+@keyframes system-online-blink {
+  50% {
+    opacity: .15;
+    box-shadow: none
+  }
+}
+
+.briefing-panel h2 {
+  margin: 0;
+  font: 600 clamp(1.35rem, 3vw, 1.85rem)/1.25 var(--display);
+  letter-spacing: .01em
+}
+
+.briefing-objective {
+  margin: .55rem 0 1rem;
+  color: #7DD3FC;
+  font: 600 .98rem/1.45 var(--body)
+}
+
+.briefing-rules {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .65rem
+}
+
+.briefing-rules li {
+  padding: .7rem .8rem;
+  border: 1px solid rgba(11, 61, 145, .85);
+  border-radius: 4px;
+  background: rgba(11, 18, 34, .55)
+}
+
+.briefing-rules h3 {
+  margin: 0 0 .25rem;
+  color: #93C5FD;
+  font: 600 .82rem/1.35 var(--display);
+  letter-spacing: .04em;
+  text-transform: uppercase
+}
+
+.briefing-rules p {
+  margin: 0;
+  color: var(--ink);
+  font: 500 .95rem/1.5 var(--body)
+}
+
+.briefing-init {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 1rem;
+  border: 1px solid #7EB6FF;
+  border-radius: 4px;
+  background: #0B3D91;
+  color: #fff;
+  cursor: pointer;
+  font: 700 1.05rem/1.3 var(--display);
+  letter-spacing: .06em;
+  touch-action: manipulation
+}
+
+.briefing-init:hover {
+  background: #124EAD
+}
+
+.briefing-init:active {
+  transform: scale(.985)
+}
+
+.briefing-init:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px
+}
+
+@media (max-width:640px) {
+  .briefing {
+    padding: .75rem
+  }
+  .briefing-panel {
+    padding: 1.1rem 1rem 1rem
+  }
+  .briefing-rules p {
+    font-size: .9rem
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .system-online {
+    animation: none
+  }
+}

@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>OreWay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="style.css">
   </head>
@@ -66,7 +69,7 @@
 
     <section id="app" aria-labelledby="mission-heading">
       <header class="hud">
-        <div class="hud-actions">
+        <div class="hud-lead">
           <button
             class="hb"
             id="menuBtn"
@@ -74,20 +77,17 @@
             aria-controls="menu"
             aria-expanded="false"
           >
-            Mission Control
+            Systems
           </button>
-          <button class="hb overview-btn" id="overviewBtn" type="button">← Overview</button>
+          <p class="hud-title">Mission Control</p>
         </div>
-        <h2 id="mission-heading">
-          Syrtis Major Planum
-          <span>MC-13 Quadrangle · 8.4°N, 69.5°E</span>
-        </h2>
-        <button class="hb" id="modeBtn" type="button" aria-pressed="false">Day Ops</button>
+        <h2 id="mission-heading">Syrtis Major Planum</h2>
+        <div class="hud-end">
+          <p class="hud-coords">8.4°N, 69.5°E</p>
+          <button class="hb overview-btn" id="overviewBtn" type="button">Overview</button>
+          <button class="hb" id="modeBtn" type="button" aria-pressed="false">Day Ops</button>
+        </div>
       </header>
-
-      <div id="banner" class="alertbar ok" role="status" aria-live="polite">
-        <span id="bmsg"></span>
-      </div>
 
       <div class="work">
         <div class="mapbox">
@@ -239,34 +239,43 @@
             </div>
             <div class="legend" id="legend" aria-label="Map legend"></div>
           </div>
-        </div>
-
-        <div class="side">
-          <div class="sim">
-            <div class="simh">
-              <b>Traverse progress</b>
-              <span id="simKm">0.0 km of 8.3 km</span>
-              <span>O₂ <b id="simO2">100%</b></span>
-            </div>
-            <input
-              type="range"
-              id="slider"
-              min="0"
-              max="1000"
-              value="0"
-              aria-label="EVA route progress"
-            >
-            <div class="wps">
-              <button class="wp" type="button" data-id="base">Base</button>
-              <button class="wp" type="button" data-id="s1">Site 1</button>
-              <button class="wp" type="button" data-id="s2">Site 2</button>
-              <button class="wp" type="button" data-id="s3">Site 3</button>
-              <button class="wp" type="button" id="autoBtn">Run route</button>
-            </div>
+          <div id="banner" class="alertbar ok" role="status" aria-live="polite">
+            <span id="bmsg"></span>
           </div>
-          <section class="info" id="info" aria-live="polite"></section>
         </div>
       </div>
+
+      <footer class="deck" aria-label="Critical telemetry">
+        <div class="sim">
+          <div class="simh">
+            <b>Traverse progress</b>
+            <span id="simKm">0.0 km of 8.3 km</span>
+            <span>O₂ <b id="simO2">100%</b></span>
+          </div>
+          <input
+            type="range"
+            id="slider"
+            min="0"
+            max="1000"
+            value="0"
+            aria-label="EVA route progress"
+          >
+          <div class="wps">
+            <button class="wp" type="button" data-id="base">Base</button>
+            <button class="wp" type="button" data-id="s1">Site 1</button>
+            <button class="wp" type="button" data-id="s2">Site 2</button>
+            <button class="wp" type="button" data-id="s3">Site 3</button>
+            <button class="wp" type="button" id="autoBtn">Run route</button>
+          </div>
+        </div>
+        <div class="deck-critical">
+          <p class="readout" id="deckO2">Suit O2: 100%</p>
+          <p class="readout">Signal Delay: 14m 20s</p>
+          <p class="readout">Next Waypoint: 150m</p>
+          <p class="sos-note" id="sosNote" role="status"></p>
+          <button class="sos" id="sosBtn" type="button" aria-pressed="false">SOS</button>
+        </div>
+      </footer>
 
       <div class="scrim" id="scrim"></div>
       <aside class="menu" id="menu" aria-label="Mission menu" inert>
@@ -340,7 +349,10 @@
           <p id="sigRead">Base Camp direct link</p>
         </div>
 
-        <h3>4. Mission Snapshot</h3>
+        <h3>4. Selected Site</h3>
+        <section class="info" id="info" aria-live="polite"></section>
+
+        <h3>5. Mission Snapshot</h3>
         <button class="big fun" id="snapBtn" type="button">
           Generate mission snapshot
         </button>
@@ -362,6 +374,44 @@
       </div>
     </section>
 
+    <div
+      class="briefing"
+      id="briefing"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="briefingTitle"
+    >
+      <div class="briefing-panel">
+        <p class="briefing-status">
+          <span class="system-online" aria-hidden="true"></span>
+          System Online
+        </p>
+        <h2 id="briefingTitle">Syrtis Major: Astronaut Survival &amp; Science Guide</h2>
+        <p class="briefing-objective">Mission Objective: Explore Early Noachian bedrock and collect hydrated minerals.</p>
+        <ol class="briefing-rules">
+          <li>
+            <h3>Rule 1 (Terrain - MOLA)</h3>
+            <p>Walk only on flat basalt paths in the southeast. Strictly avoid the steep northwest caldera walls (1,800m drop).</p>
+          </li>
+          <li>
+            <h3>Rule 2 (Heat &amp; Dust - THEMIS)</h3>
+            <p>Dark volcanic rocks absorb extreme heat. Keep suit cooling and dust filters active, and never walk across moving sand dunes.</p>
+          </li>
+          <li>
+            <h3>Rule 3 (Mining Targets - CRISM)</h3>
+            <p>Collect Iron &amp; Titanium at the outer ridge, and Copper &amp; Hydrated Silica at Nili Patera vents for base construction.</p>
+          </li>
+          <li>
+            <h3>Rule 4 (Oxygen &amp; Signal Rule)</h3>
+            <p>Begin return to Base Camp before oxygen drops below 50%. Orbiter relay activates automatically if terrain blocks radio signal (Signal Delay: 14m 20s).</p>
+          </li>
+        </ol>
+        <button class="briefing-init" id="briefingDismiss" type="button">Initialize Surface Telemetry</button>
+      </div>
+    </div>
+
+    <script src="briefing.js" defer></script>
+    <script src="dashboard.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="data.js" defer></script>
