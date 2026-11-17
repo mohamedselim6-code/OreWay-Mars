@@ -33,5 +33,5 @@ We selected **Syrtis Major Planum (8.400°N, 69.500°E)** for its high scientifi
 
 ## Contributors 
 
-Malak Mohamed Gaafar
-Mohamed Abdelkhalek Selim
+** Malak Mohamed Gaafar
+** Mohamed Abdelkhalek Selim
