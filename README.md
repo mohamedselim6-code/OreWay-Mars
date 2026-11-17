@@ -30,3 +30,8 @@ We selected **Syrtis Major Planum (8.400°N, 69.500°E)** for its high scientifi
 
 ---
 *Developed for the NASA Space Apps Challenge 2026.*
+
+## Contributors 
+
+Malak Mohamed Gaafar
+Mohamed Abdelkhalek Selim
