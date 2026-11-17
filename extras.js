@@ -5,6 +5,44 @@
   var guideButton = document.getElementById('guideBtn');
   var alertPanel = document.querySelector('.system-alerts');
 
+  /* === Emergency Decision Support Panel === */
+  var decisionModal = document.getElementById('speDecision');
+  var decisionAck = document.getElementById('speDecisionAck');
+  var decisionReturnFocus = null;
+
+  function openDecisionModal() {
+    if (!decisionModal) return;
+    decisionReturnFocus = document.activeElement;
+    decisionModal.hidden = false;
+    document.body.classList.add('spe-decision-open');
+    if (decisionAck) decisionAck.focus();
+  }
+
+  function closeDecisionModal() {
+    if (!decisionModal || decisionModal.hidden) return;
+    decisionModal.hidden = true;
+    document.body.classList.remove('spe-decision-open');
+    if (decisionReturnFocus && document.contains(decisionReturnFocus)) {
+      decisionReturnFocus.focus();
+    } else if (simulateButton) {
+      simulateButton.focus();
+    }
+    decisionReturnFocus = null;
+  }
+
+  if (decisionAck) {
+    decisionAck.addEventListener('click', closeDecisionModal);
+  }
+
+  /* Acknowledge = dismiss the panel only; the SPE scenario and its guidance stay active. */
+  if (decisionModal) {
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || decisionModal.hidden) return;
+      e.preventDefault();
+      closeDecisionModal();
+    });
+  }
+
   if (!guideButton || !alertPanel) {
     console.error('Solar Particle Event controls could not initialize: required UI elements are missing.');
     return;
@@ -29,6 +67,7 @@
   function resetControls() {
     simulateButton.disabled = false;
     solarAlert.hidden = true;
+    closeDecisionModal();
     if (resetButton) {
       resetButton.remove();
       resetButton = null;
@@ -52,6 +91,9 @@
     addResetButton();
     document.dispatchEvent(new CustomEvent('oreway:spe-start'));
   });
+
+  /* Open the decision panel only once app.js has accepted the scenario. */
+  document.addEventListener('oreway:spe-started', openDecisionModal);
 
   document.addEventListener('oreway:spe-reset', resetControls);
   document.addEventListener('oreway:spe-rejected', resetControls);

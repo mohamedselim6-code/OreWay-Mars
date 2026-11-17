@@ -354,7 +354,7 @@
       x: gx + 4,
       y: 16,
       class: 'gl'
-    }, gr).textContent = (target.longitude + (gx - map.width / 2) / map.width * map.longitudeSpan).toFixed(3) + '°E'
+    }, gr).textContent = (target.longitude + (gx - map.width / 2) / map.width * map.longitudeSpan).toFixed(3) + 'Â°E'
   }
   for (var gy = 0; gy <= map.height; gy += 100) {
     el('line', {
@@ -369,14 +369,14 @@
       x: 4,
       y: gy - 5,
       class: 'gl'
-    }, gr).textContent = (target.latitude + (map.height / 2 - gy) / map.height * map.latitudeSpan).toFixed(3) + '°N'
+    }, gr).textContent = (target.latitude + (map.height / 2 - gy) / map.height * map.latitudeSpan).toFixed(3) + 'Â°N'
   }
   el('text', {
     x: 748,
     y: 60,
     class: 'gl',
     'font-size': 22
-  }, gr).textContent = 'N ↑';
+  }, gr).textContent = 'N â†‘';
   /* route + stations */
   var route = $('#route'), routeD = $('#routeD');
   route.setAttribute('d', map.route);
@@ -566,7 +566,7 @@
     var period = night ? 'night' : 'day';
     layer.addTo(gisMap);
     if (!gisThemisReady[period]) {
-      setMapStatus('NASA Mars Trek · THEMIS ' + period.toUpperCase() + ' IR loading');
+      setMapStatus('NASA Mars Trek Â· THEMIS ' + period.toUpperCase() + ' IR loading');
       gisThemisTimeout = setTimeout(function () {
         if (
           LAY.indexOf('thermal') >= 0 &&
@@ -607,7 +607,7 @@
   function loadCrismDetections() {
     if (crismLoadState !== 'idle') return;
     crismLoadState = 'loading';
-    setCrismStatus('Loading NASA CRISM regional detections…');
+    setCrismStatus('Loading NASA CRISM regional detectionsâ€¦');
     var bounds = D.layers.crism.regionalBounds;
     var params = new URLSearchParams({
       where: "Instrument='CRISM' AND Latitude >= " + bounds.south +
@@ -650,8 +650,8 @@
         content.appendChild(classification);
         var location = document.createElement('p');
         location.textContent =
-          'Location: ' + latitude.toFixed(3) + '°N, ' +
-          longitude.toFixed(3) + '°E';
+          'Location: ' + latitude.toFixed(3) + 'Â°N, ' +
+          longitude.toFixed(3) + 'Â°E';
         content.appendChild(location);
         var limitation = document.createElement('p');
         limitation.textContent = D.layers.crism.classificationNote;
@@ -665,7 +665,7 @@
         marker.bindPopup(content, {
           className: 'gis-science-popup'
         });
-        marker.bindTooltip('CRISM · ' + (attributes.Type || 'Detection'));
+        marker.bindTooltip('CRISM Â· ' + (attributes.Type || 'Detection'));
         marker.addTo(gisCrismLayer);
       });
       crismLoadState = 'loaded';
@@ -685,7 +685,7 @@
   }
   function updateSepLegend() {
     if (sepLoadState === 'loading') {
-      sepStatusText = 'Loading NASA DONKI SEP events…';
+      sepStatusText = 'Loading NASA DONKI SEP eventsâ€¦';
     } else if (sepLoadState === 'error') {
       sepStatusText = 'NASA DONKI data unavailable. ' +
         D.layers.radiation.limitation;
@@ -798,14 +798,14 @@
       maxZoom: 12,
       maxNativeZoom: D.layers.mola.maxNativeZoom,
       tileSize: 256,
-      attribution: 'Topography: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · MGS MOLA</a>'
+      attribution: 'Topography: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek Â· MGS MOLA</a>'
     }).addTo(gisMap);
     gisBaseLayer.on('tileload', function () {
       if (gisTilesReady) return;
       clearTimeout(gisTileTimeout);
       gisTileTimeout = 0;
       gisTilesReady = true;
-      setMapStatus('NASA Mars Trek · MOLA color-shaded relief');
+      setMapStatus('NASA Mars Trek Â· MOLA color-shaded relief');
     });
     gisBaseLayer.on('tileerror', function () {
       if (!gisTilesReady) {
@@ -826,7 +826,7 @@
       tileSize: 256,
       opacity: .72,
       pane: 'scienceRasters',
-      attribution: 'Day IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · THEMIS</a>'
+      attribution: 'Day IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek Â· THEMIS</a>'
     });
     gisThemisNightLayer = L.tileLayer(GIS_THEMIS_NIGHT_TILES, {
       minZoom: 8,
@@ -835,14 +835,14 @@
       tileSize: 256,
       opacity: .72,
       pane: 'scienceRasters',
-      attribution: 'Night IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek · THEMIS</a>'
+      attribution: 'Night IR: <a href="https://trek.nasa.gov/mars/">NASA Mars Trek Â· THEMIS</a>'
     });
     gisThemisDayLayer.on('tileload', function () {
       gisThemisReady.day = true;
       if (LAY.indexOf('thermal') >= 0 && !world.classList.contains('night')) {
         clearTimeout(gisThemisTimeout);
         gisThemisTimeout = 0;
-        setMapStatus('NASA Mars Trek · THEMIS Day IR controlled mosaic');
+        setMapStatus('NASA Mars Trek Â· THEMIS Day IR controlled mosaic');
       }
     });
     gisThemisNightLayer.on('tileload', function () {
@@ -850,7 +850,7 @@
       if (LAY.indexOf('thermal') >= 0 && world.classList.contains('night')) {
         clearTimeout(gisThemisTimeout);
         gisThemisTimeout = 0;
-        setMapStatus('NASA Mars Trek · THEMIS Night IR controlled mosaic');
+        setMapStatus('NASA Mars Trek Â· THEMIS Night IR controlled mosaic');
       }
     });
     gisThemisDayLayer.on('tileerror', function () {
@@ -874,7 +874,7 @@
       lineCap: 'round',
       lineJoin: 'round'
     }).addTo(gisMap);
-    gisRouteLayer.bindTooltip('Configured traverse · 8.3 km');
+    gisRouteLayer.bindTooltip('Configured traverse Â· 8.3 km');
     gisHazardLayer = L.polygon(GIS_HAZARD, {
       color: '#EF4444',
       weight: 2,
@@ -882,7 +882,7 @@
       fillColor: '#EF4444',
       fillOpacity: .2
     }).addTo(gisMap);
-    gisHazardLayer.bindTooltip('Crater-margin planning exclusion · slope not evaluated');
+    gisHazardLayer.bindTooltip('Crater-margin planning exclusion Â· slope not evaluated');
     gisHazardLayer.on('click', function () {
       pick('haz')
     });
@@ -971,8 +971,8 @@
       var latitudeHemisphere = point.lat < 0 ? 'S' : 'N';
       var longitudeHemisphere = point.lng < 0 ? 'W' : 'E';
       $('#cursorLatLon').textContent =
-        point.lat.toFixed(3) + '°' + latitudeHemisphere + ' · ' +
-        point.lng.toFixed(3) + '°' + longitudeHemisphere;
+        point.lat.toFixed(3) + 'Â°' + latitudeHemisphere + ' Â· ' +
+        point.lng.toFixed(3) + 'Â°' + longitudeHemisphere;
     });
     gisMap.on('mouseout', function () {
       $('#cursorLatLon').textContent = 'Cursor: --'
@@ -1087,8 +1087,8 @@
     var ch = h ? s.chips : [
       ['Distance', s.km + ' km'],
       ['Estimated walk time', fmt(s.km)],
-      ['Estimated suit O₂ on arrival', arrival + '%'],
-      ['Coordinates', coordinates[0].toFixed(3) + '°N, ' + coordinates[1].toFixed(3) + '°E']
+      ['Estimated suit Oâ‚‚ on arrival', arrival + '%'],
+      ['Coordinates', coordinates[0].toFixed(3) + 'Â°N, ' + coordinates[1].toFixed(3) + 'Â°E']
     ];
     var sampleNote = '';
     if (
@@ -1097,11 +1097,11 @@
       typeof sample.slopeDegrees === 'number'
     ) {
       var crismNote = typeof sample.crismBandValue === 'number'
-        ? ' · CRISM index ' + sample.crismBandValue.toPrecision(4)
+        ? ' Â· CRISM index ' + sample.crismBandValue.toPrecision(4)
         : '';
       sampleNote =
         '<p class="fn">Raster sample: ' + sample.elevationMeters.toFixed(1) +
-        ' m elevation · ' + sample.slopeDegrees.toFixed(1) + '° slope' +
+        ' m elevation Â· ' + sample.slopeDegrees.toFixed(1) + 'Â° slope' +
         crismNote + '</p>';
     }
     var siteNote = s.note && s.note !== s.tag && s.note !== s.tag + '.'
@@ -1541,18 +1541,18 @@
   /* === 8. Layer controls and map legend === */
   var LG = {
     def: '<p>No map data layers are active.</p>',
-    mola: '<h4>MOLA · relief &amp; traverse</h4>' +
+    mola: '<h4>MOLA Â· relief &amp; traverse</h4>' +
       '<p><i style="background:#10B981"></i>Green = Configured traverse</p>' +
       '<p><i style="background:#EF4444"></i>Red = Crater-margin planning exclusion</p>' +
       '<p>Global 463 m mosaic; slope is not classified.</p>',
-    thermal: '<h4>THEMIS · thermal context</h4>' +
+    thermal: '<h4>THEMIS Â· thermal context</h4>' +
       '<p id="themisLegendStatus">Day IR controlled mosaic selected.</p>' +
       '<p>100 m products; not current surface-temperature measurements.</p>',
-    crism: '<h4>CRISM · mineral detections</h4>' +
+    crism: '<h4>CRISM Â· mineral detections</h4>' +
       '<p id="crismLegendStatus">Regional catalog not queried.</p>' +
       '<p><i style="background:#F59E0B"></i>Yellow = Mineral Deposits</p>' +
       '<p>Catalog classes do not confirm mineral species.</p>',
-    radiation: '<h4>NASA DONKI · SEP events</h4>' +
+    radiation: '<h4>NASA DONKI Â· SEP events</h4>' +
       '<p id="sepLegendStatus">NASA DONKI event context; no surface dose measurement</p>' +
       '<p id="sepLegendState" class="sep-state">Event status unavailable</p>' +
       '<p><i style="background:#10B981"></i>Green = No event reported</p>' +
@@ -1615,7 +1615,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Illustrative planning estimate · not live telemetry',
+            text: 'Illustrative planning estimate Â· not live telemetry',
             color: '#F8FAFC',
             font: {
               size: 11,
@@ -1689,7 +1689,7 @@
             max: 100,
             title: {
               display: true,
-              text: 'O₂ (%)',
+              text: 'Oâ‚‚ (%)',
               color: '#10B981',
               font: {
                 size: 9
@@ -2031,6 +2031,8 @@
       'alert',
       'SOLAR PARTICLE EVENT SIMULATION: Elevated radiation risk. Return to Base Camp using emergency guidance.'
     );
+    /* Notify the decision-support overlay; fired only when the scenario is accepted. */
+    document.dispatchEvent(new CustomEvent('oreway:spe-started'));
   });
   document.addEventListener('oreway:spe-reset', function () {
     if (!solarParticleEventActive) return;

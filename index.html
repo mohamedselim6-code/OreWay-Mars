@@ -14,7 +14,7 @@
     <header class="bar" role="status" aria-label="Mission status">
       <div class="cell">
         Target:
-        <b>Syrtis Major Planum • MC-13 Quadrangle (8.4°N, 69.5°E)</b>
+        <b>Syrtis Major Planum Ã¢â‚¬Â¢ MC-13 Quadrangle (8.4Ã‚Â°N, 69.5Ã‚Â°E)</b>
       </div>
       <div class="cell">
         <span class="led"></span>
@@ -55,7 +55,7 @@
             ></path>
             <circle class="dot" r="3"></circle>
           </svg>
-          <span class="tag">Syrtis Major<small>8.4°N, 69.5°E</small></span>
+          <span class="tag">Syrtis Major<small>8.4Ã‚Â°N, 69.5Ã‚Â°E</small></span>
         </div>
       </section>
 
@@ -114,7 +114,7 @@
         <button class="sw" role="switch" aria-checked="true" data-l="mola">
           <span class="t">
             <b>MOLA Color-Shaded Relief</b>
-            <small>NASA Mars Trek global mosaic · 463 m · no slope classification</small>
+            <small>NASA Mars Trek global mosaic Ã‚Â· 463 m Ã‚Â· no slope classification</small>
             <small class="layer-status" id="rasterSampleStatus">No local numeric samples</small>
           </span>
           <span class="st">ON</span>
@@ -123,7 +123,7 @@
         <button class="sw" role="switch" aria-checked="false" data-l="thermal">
           <span class="t">
             <b>THEMIS Day/Night IR Mosaics</b>
-            <small>NASA Mars Trek controlled mosaics · 100 m</small>
+            <small>NASA Mars Trek controlled mosaics Ã‚Â· 100 m</small>
           </span>
           <span class="st">OFF</span>
           <span class="knob"></span>
@@ -139,7 +139,7 @@
         </button>
         <button class="sw" role="switch" aria-checked="false" data-l="radiation">
           <span class="t">
-            <b>Radiation Risk · DONKI SEP Events</b>
+            <b>Radiation Risk Ã‚Â· DONKI SEP Events</b>
             <small>Global event context; no Mars surface-dose measurement</small>
             <small class="layer-status" id="radiationStatus">Not queried</small>
           </span>
@@ -153,6 +153,16 @@
         >Dust-storm data: not loaded</small>
           </div>
         </details>
+
+        <section class="research-objectives" aria-labelledby="researchObjectivesHeading">
+          <h3 id="researchObjectivesHeading">Scientific Objectives</h3>
+          <p class="ro-lead">Research Objectives:</p>
+          <ol class="ro-list">
+            <li>Analyze Early Noachian bedrock (&gt;4 Ga) for ancient biosignatures.</li>
+            <li>Investigate Hydrated Silica at Nili Patera (Site 2) to map past aqueous activity.</li>
+            <li>Evaluate Ilmenite/Magnetite deposits at Site 1 for In-Situ Resource Utilization (ISRU).</li>
+          </ol>
+        </section>
 
         <div class="selected-site-panel">
         <h3>3. Selected site</h3>
@@ -169,7 +179,7 @@
             aria-controls="mission-sidebar"
             aria-expanded="false"
             aria-label="Open Mission Control sidebar"
-          >☰</button>
+          >Ã¢ËœÂ°</button>
           <button
             class="hb"
             id="menuBtn"
@@ -183,7 +193,7 @@
         </div>
         <h2 id="mission-heading">Syrtis Major Planum</h2>
         <div class="hud-end">
-          <p class="hud-coords">8.4°N, 69.5°E</p>
+          <p class="hud-coords">8.4Ã‚Â°N, 69.5Ã‚Â°E</p>
           <span class="mission-status-chip">Planning</span>
           <button class="hb overview-btn" id="overviewBtn" type="button">Overview</button>
           <button class="hb" id="modeBtn" type="button" aria-pressed="false">Day Ops</button>
@@ -330,7 +340,7 @@
             </div>
             <div class="map-hud" aria-live="polite">
               <span id="cursorLatLon">Cursor: --</span>
-              <span class="north-arrow" aria-label="North">↑ <b>N</b></span>
+              <span class="north-arrow" aria-label="North">Ã¢â€ â€˜ <b>N</b></span>
             </div>
           </div>
         </div>
@@ -391,7 +401,7 @@
         </div>
         <div class="deck-critical" id="deck-critical">
           <p class="readout" id="deckO2">
-            Suit O₂: <span id="deckO2Value">100%</span>
+            Suit OÃ¢â€šâ€š: <span id="deckO2Value">100%</span>
             <small>(Simulated Planning Estimate)</small>
           </p>
           <p
@@ -444,7 +454,7 @@
               aria-label="Estimated oxygen 100 percent"
             >
               <span class="gval" id="o2Value">100%</span>
-              <span class="glabel">Estimated O₂</span>
+              <span class="glabel">Estimated OÃ¢â€šâ€š</span>
             </div>
             <div
               class="gauge"
@@ -475,7 +485,7 @@
           <img id="snapImg" alt="Mission postcard from Syrtis Major">
           <div class="row">
             <a class="hb" id="snapDl" download="OreWay-Syrtis-Major.png">
-              ⬇ DOWNLOAD PNG
+              Ã¢Â¬â€¡ DOWNLOAD PNG
             </a>
             <button class="hb" id="snapX" type="button">CLOSE</button>
           </div>
@@ -584,6 +594,39 @@
           </li>
         </ol>
         <button class="briefing-init" id="briefingDismiss" type="button">Initialize Surface Telemetry</button>
+      </div>
+    </div>
+
+    <div
+      class="spe-decision"
+      id="speDecision"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="speDecisionTitle"
+      aria-describedby="speDecisionWhy speDecisionAction"
+    >
+      <div class="spe-decision-panel">
+        <p class="spe-decision-status">
+          <span class="spe-decision-led" aria-hidden="true"></span>
+          Emergency alert
+        </p>
+        <h2 id="speDecisionTitle">DECISION SUPPORT: SOLAR PARTICLE EVENT</h2>
+        <section class="spe-decision-block spe-decision-why">
+          <h3>Why</h3>
+          <p id="speDecisionWhy">
+            High radiation levels detected by NASA DONKI. Mars lacks a global magnetic field, exposing the astronaut to extreme risk.
+          </p>
+        </section>
+        <section class="spe-decision-block spe-decision-action">
+          <h3>Recommended action</h3>
+          <p id="speDecisionAction">
+            Reroute immediately to Base Camp Alpha. Safety threshold exceeded.
+          </p>
+        </section>
+        <button class="spe-decision-ack" id="speDecisionAck" type="button">
+          Acknowledge &amp; Return to Base
+        </button>
       </div>
     </div>
 
